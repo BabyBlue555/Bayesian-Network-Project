@@ -1,0 +1,6 @@
+*.txt
+*.svg
+*.xml
+out
+.idea
+.iml
