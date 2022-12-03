@@ -27,7 +27,7 @@ public class BayesianNetwork {
 
     // helping function for createVariables and createNodes
     // returns the value between tags in the xml file
-    private static String getData(String line){
+    public static String getData(String line){
         String value = line.split(">")[1].split("<")[0]; // get the data between >data< from the xml
         return value;
     }
@@ -54,7 +54,7 @@ public class BayesianNetwork {
                 }
                 else{
                     if(line.matches("(.*<DEF.*)")){
-                        createVariables(net,scan);
+                        createNodes(net,scan);
                     }
                 }
             }
@@ -84,9 +84,40 @@ public class BayesianNetwork {
         net.addNode(var_name,node);
     }
 
-    private static void initializeNodes(BayesianNetwork net, Scanner scanner){
+    public void createNodes(BayesianNetwork net, Scanner scanner){
+        String name_var;
+        ArrayList<String> parents= new ArrayList<>();
+        ArrayList<Double> probs = new ArrayList<>();
 
+        String line= scanner.nextLine();
+        name_var=getData(line);
+        // find parents in text
+        line=scanner.nextLine();
+        while(line.matches("(.*)<GIVEN>(.*)</GIVEN>(.*)")){
+            parents.add(getData(line));
+            line= scanner.nextLine();
+        }
+
+        //initialize parents
+
+        BayesianNode cur_node = (BayesianNode) net.get_nodes().get(name_var); // get the current node from the hashtable by its variable name
+        for(String parent: parents){
+                BayesianNode parent_node=(BayesianNode) net.get_nodes().get(parent);
+                cur_node.addParents(parent_node); // add the parent to the child - current node list of parents
+        }
+
+        // find probabilities in xml
+        String[] probs_str = line.split(">")[1].split("<")[0].split(" ");
+        for (String str : probs_str){
+            probs.add(Double.parseDouble(str));
+        }
+       // String[] ST=prob(probs_str);
     }
+
+//    public String[] prob(String[] probs_str){
+//        return probs_str;
+//    }
+
 
 
 }
