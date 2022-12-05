@@ -122,194 +122,57 @@ public class BasicProb {
         return hidden_values;
     }
 
-    public String [][] make_CPT(String line) {
 
-        int num_parents = queryNode.getParents().size();
-        int num_col = num_parents + 2; // 2 = one query and probability column
-        int num_rows = queryNode.getVar().getValues().size();
-        if(num_parents>0) {
-            for (BayesianNode parent : queryNode.getParents()) {
-                num_rows *= parent.getVar().getValues().size();
-            }
+
+    public Double calcProb () {
+
+        double total_probability=0;
+        double query_prob=0;
+        ArrayList<Double> evidence_prob= new ArrayList<>();
+        ArrayList<Double> hidden_prob= new ArrayList<>();
+        // 1. make a list of all the variables of the net.
+        //2. make a node for each variable in order to make a cpt
+        //3. make cpt's in order to calculate the probabilities
+
+   //     ArrayList<Variable> _variables= new ArrayList<>();
+        BayesianNode query_node=(BayesianNode)net.get_nodes().get(query_var);
+        String [][] query_cpt=query_node.getFactor().make_CPT(query_node);
+       // _variables.add(query_node.getVar());
+        for(String evidence: evidence_vars){
+            BayesianNode evidence_node= (BayesianNode)net.get_nodes().get(evidence);
+            String [][] evidence_cpt=evidence_node.getFactor().make_CPT(evidence_node);
+    //        _variables.add(evidence_node.getVar());
         }
-        num_rows ++; // because we want to have a row for the variable names
-        String  [][] CPT_query=new String[num_rows][num_col];
+        for (String hidden: hidden_vars){
+            BayesianNode hidden_node= (BayesianNode)net.get_nodes().get(hidden);
+            String [][]  hidden_cpt=hidden_node.getFactor().make_CPT(hidden_node);
+     //       _variables.add(hidden_node.getVar());
+        }
 
-        // putting values in the matrix
-        //a. putting names of vars in the first row
-        for(int j=0; j< num_col;j++){
-            if(j==num_col-1) {
-                continue;
-            }
-            else if (j== num_col-2){
-                CPT_query[0][j] = queryNode.getVar().getName();
-            }
-            else{
-                while (j<num_col-2) {
-                    for(BayesianNode parent: queryNode.getParents()){
-                        CPT_query[0][j]= parent.getVar().getName();
-                    }
-                    j++;
+        if(query_node.getParents()!=null){
+
+        }
+        else{ // if query has no parents
+            for(int i=1;i<query_cpt.length;i++){
+                if(this.queryValue==query_cpt[i][1] ){
+                    total_probability+=Double.parseDouble(query_cpt[i][0]);
                 }
             }
         }
 
-        int value_index = 0;
-        String[] values =queryNode.getVar().getValues().toArray(new String[0]);
-        for(int j=num_col-1; j>=num_col-2; j--){
-            for(int i=1; i<num_rows;i++){
-                if(j==num_col-1){ // column of probabilities
-                    for(Double prob: queryNode.getFactor().getProbabilities()) {
-                        CPT_query[i][j] = String.valueOf(prob); // convert double to string
-                    }
-                }
-                else if(j==num_col-2){ // column of query
-                    CPT_query[i][j]= values[value_index];
-                    value_index = (value_index+1) % values.length; // in order to have a " TFTFTF..." sequence
-                }
-//                else{
-//                    if(num_parents>0){
-//                        while(j>num_parents){
-//                            String first_str=    CPT_query[1][num_col-2]; // the first value of query in the cpt
-//                            for(BayesianNode parent: queryNode.getParents()){
-//                                value_index = 0; // for each parent node, start over
-//                                values=parent.getVar().getValues().toArray(new String[0]);
-//                                if(CPT_query[i][num_col-2].equals(first_str)){
-//                                    CPT_query[i][j]=values[value_index];
-//                                    value_index = (value_index+1) % values.length;
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-            }
-        }
-        int parent_index=num_parents;
-        String first_str= CPT_query[1][num_col-2];
-        for(int j=num_col-3;j>=0;j--){
-            for(BayesianNode parent: queryNode.getParents()){
-              value_index = 0; // for each parent node, start over
-              values=parent.getVar().getValues().toArray(new String[0]);
-              for(int i=1; i<num_rows; i++){
-                  if(CPT_query[i][num_col-2].equals(first_str)){ // check the status in query column
-                    // if we came back to v1 - change value of parent
-                      // note - value index doesn't change in the "else" section
-                    CPT_query[i][j]=values[value_index];
-                    value_index = (value_index+1) % values.length;
-              }
-                  else{ // that means we need to keep putting the same value of parent
-                      // since the the query gives us different values - i.e. , v1, v2, v3...
-                      int previous_value_index = (value_index-1)%values.length;
-                      if (previous_value_index<0) {
-                          previous_value_index+=values.length; }
-                      CPT_query[i][j]= values[previous_value_index];
 
-                  }
-        }
+
+
+
+
+
+
+
 
     }
 
 
-//    public ArrayList<Double> getProb(Scanner scanner , String line){
-//        net.createNodes(net,scanner);
-//        ArrayList<Double> probs= queryNode.getFactor().getProbabilities();
-//
-//
-//    }
 
 }
 
 
-
-
-
-
-
-//    public Double probability(String fileName, Scanner scanner ) throws FileNotFoundException {
-//        net=net.readXML(fileName);
-////        for(String hidden:hidden_vars ){
-////
-////        }
-//
-//        for(int i=1; i<=addition_counter+1; i++){
-//            //getQueryValue()
-//        }
-////        net.createNodes(net, scanner);
-////        net.prob();
-//        //num_of_sum=hidden_vars.size()*hidden_vars.size(); // number of hidden vars multiply in the number of each
-//
-//
-//
-//}
-
-//
-//public Double calc_query(String line){
-//    String query=getQuery( line);
-//  //  Double probability;
-//    Hashtable NODES=net.get_nodes();
-//
-//    Set<String> setOfKeys = NODES.keySet();
-//
-//    for (String key : setOfKeys){
-//        if(key.equals(query)) {
-//            BayesianNode node = (BayesianNode) NODES.get(key);
-////            if(node.getParents()!=null){
-////
-////            }
-//        }
-//
-//
-//
-//            for(Factor factor : factors){
-//                boolean flag=true;
-//                BayesianNode node = (BayesianNode) NODES.get(key);
-//                ArrayList<Variable> vars=factor.getVariables();
-//
-//                for(Variable var:vars) {
-//                    while(flag){
-//                    for(BayesianNode parent:  node.getParents())
-//                        if (!query.equals(var.getName()) ||! parent.equals(var.getName())){
-//                            flag=false;
-//                            break;
-//                        }
-//
-//                }
-//                    break;
-//            }
-//                double calc=0;
-//                for(String index:factor.getVar_values()){
-//                    for(Double probability: factor.getProbabilities()){
-//                    if(getQueryValue(line).equals(index)){
-//                        calc= probability;
-//
-//                        }
-//
-//                    }
-//                }
-//                }
-//
-//
-//
-//
-//    }
-//    return 1.;
-//}
-//
-//public void check_node(BayesianNode node){
-//        ArrayList<Variable> vars= node.getFactor().getVariables();
-//        if(node.getParents()!=null){
-//            node.var.
-//            node.getFactor().probabilities
-////            ArrayList<BayesianNode> parents= node.getParents();
-////            for (BayesianNode parent: parents){
-////                String name=parent.getVar().getName();
-////              //  if(name in vars)
-////
-////            }
-//        }
-//
-//    }
-//
-//
-//
-//}
