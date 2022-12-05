@@ -43,18 +43,21 @@ public class Factor {
 
             // putting values in the matrix
             //a. putting names of vars in the first row
-            for (int j = 0; j < num_col; j++) {
+            BayesianNode [] arr = (BayesianNode[]) node.getParents().toArray();
+            for (int j = num_col-1; j >=0; j--) {
                 if (j == num_col - 1) {
                     continue;
                 } else if (j == num_col - 2) {
-                    CPT_query[0][j] = node.getVar().getName();
+                    CPT_query[0][j] = node.getVar().getName(); // the node column is the first column after the probabilities
                 } else {
-                    while (j < num_col - 2) {
-                        for (BayesianNode parent : node.getParents()) {
-                            CPT_query[0][j] = parent.getVar().getName();
-                        }
-                        j++;
-                    }
+                    CPT_query[0][j] = arr[j].getVar().getName();
+
+//                    while (j >= 0) {
+//                        for (BayesianNode parent : node.getParents()) {
+//                            CPT_query[0][j] = parent.getVar().getName();
+//                        }
+//                        j--;
+//                    }
                 }
             }
 
