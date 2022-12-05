@@ -1,3 +1,5 @@
+import com.sun.org.apache.bcel.internal.generic.RETURN;
+
 import java.io.FileNotFoundException;
 import java.util.*;
 
@@ -17,14 +19,14 @@ public class BasicProb {
 
 
     // constructor
-    public BasicProb(BayesianNetwork net,Scanner scanner, String line) {
+    public BasicProb(BayesianNetwork net, Scanner scanner, String line) {
         this.net = net;
         this.query_var = getQuery(line);
         this.queryValue = getQueryValue(line);
         this.evidence_vars = getEvidence(line);
         this.evidence_values = getEvidenceValues(line);
         this.hidden_vars = getHidden(line);
-        this.hidden_values= getHiddenValues(scanner,line);
+        this.hidden_values = getHiddenValues(scanner, line);
         this.factors = getFactors();
 
     }
@@ -81,7 +83,7 @@ public class BasicProb {
             for (String evidence : getEvidence(line)) {
                 if (var.equals(evidence)) {
                     continue; // if the variable is evidence don't add it to the list
-                } else if (var.equals(getQuery(line))) {
+                } else if (var.equals(query_var)) {
                     continue;// if the variable is query don't add it to the list
                 } else {
                     hidden_vars.add(var);
@@ -101,7 +103,7 @@ public class BasicProb {
         for (String hidden : hidden_vars) {
             line = scanner.nextLine();
             hidden_values = new ArrayList<>(); // each hidden var has hidden_values of its own.
-            if (Objects.equals(hidden, net.getData(line))) {
+            if (Objects.equals(hidden, net.getData(line))) {  // if this is a hidden variable, and not other types.
                 //  String hidden_name = net.getData(line);
                 //   ArrayList<String> hidden_values = new ArrayList<>();
 
@@ -125,136 +127,211 @@ public class BasicProb {
     }
 
 
-
-    public Double calcProb () {
+    public Double calcProb() {
 
         double total_probability = 0;
         double query_prob = 0;
-        ArrayList<Double> evidence_prob = new ArrayList<>();
-        ArrayList<Double> hidden_prob = new ArrayList<>();
+        double evidence_prob = 0;
+//        ArrayList<Double> evidence_prob = new ArrayList<>();
+//        ArrayList<Double> hidden_prob = new ArrayList<>();
+        double total_prob = 0;
+        int count_mult = 0;
         // 1. make a list of all the variables of the net.
         //2. make a node for each variable in order to make a cpt
         //3. make cpt's in order to calculate the probabilities
 
-        //     ArrayList<Variable> _variables= new ArrayList<>();
+
+        //a. make cpt for query, and calculate its single probability
         BayesianNode query_node = (BayesianNode) net.get_nodes().get(query_var);
         String[][] query_cpt = query_node.getFactor().make_CPT(query_node);
-        // _variables.add(query_node.getVar());
+        query_prob = prob_var(query_node, query_cpt);
+        // total_prob=query_prob;
+
+        //b. make cpt for all evidences, and calculate its single probability
         for (String evidence : evidence_vars) {
             BayesianNode evidence_node = (BayesianNode) net.get_nodes().get(evidence);
             String[][] evidence_cpt = evidence_node.getFactor().make_CPT(evidence_node);
-//            for (BayesianNode)
-            //        _variables.add(evidence_node.getVar());
+            evidence_prob *= prob_var(evidence_node, evidence_cpt); // multiply between each prob
+            //  total_prob*=prob_evidence;
+
+            // count_mult++; // pay attention - it should be less than num of probabitities
+
         }
-        for (String hidden : hidden_vars) {
-            BayesianNode hidden_node = (BayesianNode) net.get_nodes().get(hidden);
+
+
+        //c. make cpt for all hiddens, and calculate its single probability
+        BayesianNode hidden_node = null;
+        String[] arr_vars = (String[]) hidden_vars.toArray();
+//        String [] arr_node_values = (String[]) hidden_node.getVar().getValues().toArray(); // array of the hidden var values
+
+        for (int i = 0; i < arr_vars.length; i++) {
+            hidden_node = (BayesianNode) net.get_nodes().get(arr_vars[i]);
             String[][] hidden_cpt = hidden_node.getFactor().make_CPT(hidden_node);
-            //       _variables.add(hidden_node.getVar());
+            for (String value : hidden_node.getVar().getValues()) {
+                double hidden_prob = prob_var_hidden(hidden_node,value, hidden_cpt);
+                //total_prob*=hidden_prob;
+                total_prob += addition_prob(query_prob, evidence_prob, hidden_prob);
+                count_mult = count_mult + 2;
+            }
+
         }
+//         for (String hidden : hidden_vars) {
+//             hidden_node = (BayesianNode) net.get_nodes().get(hidden);
+//            String[][] hidden_cpt = hidden_node.getFactor().make_CPT(hidden_node);
+//            // double prob_hidden =prob(hidden_node,hidden_cpt);
+//            //       _variables.add(hidden_node.getVar());
+//        }
+//
+//        String [] arr_node_values = (String[]) hidden_node.getVar().getValues().toArray(); // array of the hidden var values
+//        for(int i=0; i<arr_node_values.length;i++){
+//            String[][] hidden_cpt = hidden_node.getFactor().make_CPT(hidden_node);
+//            double prob_hidden =prob(hidden_node,hidden_cpt);
+//
+//        }
+
+        // calculte the total prob....
+        //    return 1.0; // for now
     }
 
+    // helping function
+    public double addition_prob(double query, double evidence, double hidden) {
+        double sum = query * evidence * hidden;
+        return sum;
+    }
 
-        public void prob(BayesianNode node,String[][] cpt ) {
-            double node_prob=0;
-            String node_value=check_value_node(node); // returns the value
-          //  int count_right_values=0;
-            int index_wanted_row=0;
+    public Double prob_var_hidden(BayesianNode node, String value, String[][] cpt) {
+
+
+
+    }
+
+    // find the probability of a specific variable with a given value (given its parents)
+    public Double prob_var(BayesianNode node,  String[][] cpt) {
+        double node_prob = 0;
+         String node_value = check_value_node(node); // returns the value
+        //  int count_right_values=0;
+        int index_wanted_row = -1;
+        if (!check_node(node).equals("hidden")) {
             if (node.getParents() != null) {
-                for (int i = 1; i < cpt.length; i++) {
+                for (int i = 1; i < cpt.length; i++) { // start from row 1 since row 0 contains the names of each variable.
+                    for (int j = cpt[i].length - 2; j >= 0; j--) { // we start from the node column
+                        if (cpt[0][j].equals(node.getVar().getName())) {
 
-                    for (int j = 0; j < cpt[i].length; i++) {
-                        if(cpt[0][j].equals(node.getVar().getName()) {
                             // to check if we are on the specific var column
-
-// in order to take the row we need from the matrix, we need to check the var values
-                                if (!node_value.equals(cpt[i][j])) {
-                                    index_wanted_row=-1;
-                                    break; // keep checking the next rows
-                                }
-                                else{
-                                    index_wanted_row=i;
-                                }
-                            for (BayesianNode parent : node.getParents()) {
-                              if(  cpt[0][j].equals(parent.getVar().getName()){ // if we are in the parent column - check made_cpt() function for better understanding
-                                    if (!check_value_node(parent).equals(cpt[i][j])){
-                                        index_wanted_row=-1; // check it its good
+                            // in order to take the row we need from the matrix, we need to check each var values
+                            // edge case - if the variable is evidence we will get number of options for values, with help from check_value_node(node) method
+                            if (!node_value.equals(cpt[i][j])) {
+                                // index_wanted_row=-1;
+                                break; // keep checking the next rows
+                            } else {
+                                index_wanted_row = i;
+                            }
+                        }
+                        for (BayesianNode parent : node.getParents()) {
+                            if (cpt[0][j].equals(parent.getVar().getName())) { // if we are in the parent column (check made_cpt() function for better understanding)
+                                // does it matter if the parent is evidence/ hidden/query?
+                                // the answer is yes, since we need to know how much values we need to search and calculate
+                                if (!check_node(parent).equals("hidden")) {
+                                    if (!check_value_node(parent).equals(cpt[i][j])) {
+                                        index_wanted_row = -1; // if the value in this row is right for the node but not for one of its' parents
                                         break; // keep checking the next rows
-                                    }
-                                    else{
-                                        index_wanted_row=i;
+                                    } else {
+                                        index_wanted_row = i;
                                     }
                                 }
+//                                else{
+//
+//                                }
+
+                            }
 
                         }
                     }
+
+                    return Double.parseDouble(cpt[index_wanted_row][cpt[i].length-1]); // col = the probabilities column is the last one
                 }
             }
-                if(count_right_values==node.getParents().size() +1) {
-                    return cpt[index_wanted_row][0]
-                }
+//                if(count_right_values==node.getParents().size() +1) {
+//                    return cpt[index_wanted_row][0]
+//                }
 
-            else { // if query has no parents
-                for (int i = 1; i < cpt.length; i++) {
-                    if (this.queryValue == cpt[i][1]) {
-                        node_prob = Double.parseDouble(cpt[i][0]);
+
+            else{ // if node has no parents
+                    for (int i = 1; i < cpt.length; i++) {
+                        if (node_value == cpt[i][1]) {
+                            node_prob = Double.parseDouble(cpt[i][cpt[i].length-1]);
+                        }
                     }
+                    return node_prob;
                 }
+
+
             }
+        return -1.0;
+            // taking care of hidden var scenario
+//            else {
+////            String [] arr_node_values = (String[]) node.getVar().getValues().toArray(); // array of the var values
+////            if(node.getParents()!=null) {
+////            }
+////            else {
+////                for(int i=0; i< arr_node_values.length; i++){
+//                return -1.0; // this function doesn't fit to hidden variables.
+//
+//            }
 
 
         }
-    }
-  // return the value of  certein node, given its type
-    public String check_value_node(BayesianNode node){
-        String [] array= new String[0];
-        String [] arr_values =new String[0];
-        if(check_node(node).equals("evidence")){
-            array= evidence_vars;
-            arr_values= evidence_values;
-        }
-        else if(check_node(node).equals("hidden")){
-            array= (String[]) hidden_vars.toArray();
-            arr_values= (String[]) hidden_values.toArray();
-        }
+
+
+        // return the value of  certein node, given its type
+        public String check_value_node (BayesianNode node){
+            String[] array = new String[0];
+            String[] arr_values = new String[0];
+            if (check_node(node).equals("evidence")) {
+                array = evidence_vars;
+                arr_values = evidence_values;
+            } else if (check_node(node).equals("hidden")) {
+//            array= (String[]) hidden_vars.toArray();
+//            arr_values= (String[]) hidden_values.toArray();
+            }
 
 //        String [] arr=evidence_vars;
-        int index=0;
-        String node_value=null;
-        for(int i=0;i<array.length;i++){
-            if(node.getVar().getName().equals(array[i])){
-                index=i;
-                break;
+            int index = 0;
+            String node_value = null;
+            for (int i = 0; i < array.length; i++) {
+                if (node.getVar().getName().equals(array[i])) {
+                    index = i;
+                    break;
+                }
             }
-        }
 //        String [] arr_values =evidence_values;
-        for(int j=0; j<arr_values.length;j++){
-            if (j==index){
-                node_value=arr_values[j];
-                break;
+            for (int j = 0; j < arr_values.length; j++) {
+                if (j == index) { // find the same index as the index in the vars array
+                    node_value = arr_values[j];
+                    break;
+                }
             }
+            return node_value;
         }
-        return node_value;
-    }
 
-    // check which type of variable a certein node is - evidence, hidden or query
-    public String check_node( BayesianNode node){
-      //  String value_parent=null;
-        for (String evidence: evidence_vars){
-            if(evidence.equals(node.getVar().getName())){
+        // check which type of variable a certein node is - evidence, hidden or query
+        public String check_node (BayesianNode node){
+            //  String value_parent=null;
+            for (String evidence : evidence_vars) {
+                if (evidence.equals(node.getVar().getName())) {
 
-                return "evidence";
-            }}
-        for(String hidden: hidden_vars){
-            if(hidden.equals(node.getVar().getName())){
-                return "hidden";
+                    return "evidence";
+                }
             }
+            for (String hidden : hidden_vars) {
+                if (hidden.equals(node.getVar().getName())) {
+                    return "hidden";
+                }
+            }
+            return "query";
         }
-        return "query";
+
+
     }
-
-
-
-
-}
 
 
