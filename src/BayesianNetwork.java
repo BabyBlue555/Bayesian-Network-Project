@@ -54,7 +54,7 @@ public class BayesianNetwork {
                 }
                 else{
                     if(line.matches("(.*<DEF.*)")){
-                        createNodes(net,scan);
+                        createNodes(net,scan); // also creates a factor
                     }
                 }
             }
@@ -112,7 +112,24 @@ public class BayesianNetwork {
             probs.add(Double.parseDouble(str));
         }
        // String[] ST=prob(probs_str);
+
+        //make factor:
+        ArrayList<Variable> varsOfFactor = new ArrayList<>();
+        for (String parent : parents){
+            varsOfFactor.add( ((BayesianNode) net.get_nodes().get(parent)).getVar() );
+        }
+        varsOfFactor.add(cur_node.getVar());
+        Factor f = new Factor(varsOfFactor, probs);
+        cur_node.setFactor(f);
+
     }
+
+//
+//    public void createFactor(BayesianNetwork net, Scanner scanner){
+//        String line= scanner.nextLine();
+//        //name_var=getData(line);
+//
+//    }
 
 //    public String[] prob(String[] probs_str){
 //        return probs_str;
