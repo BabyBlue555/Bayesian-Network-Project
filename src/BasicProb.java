@@ -162,8 +162,8 @@ public class BasicProb {
         ArrayList <Double> rowProbs= new ArrayList<>();
         for( String value: hidden_values){
         for(int i=1; i<cpt.length; i++){
-            for(int j=cpt[i].length-1; j>=0; j--){
-                if (cpt[0][j].equals(hidden_node.getVar().getName()){
+            for(int j=cpt[i].length-2; j>=0; j--){
+                if (cpt[0][j].equals(hidden_node.getVar().getName())){
 
                         if(! cpt[i][j].equals(value)){
                             continue;
@@ -255,6 +255,7 @@ public class BasicProb {
         String node_value = check_value_node(node); // returns the value
         //  int count_right_values=0;
         int index_wanted_row = -1;
+        if (node_value != null) {
         if (!check_node(node).equals("hidden")) {
             if (node.getParents() != null) {
                 for (int i = 1; i < cpt.length; i++) { // start from row 1 since row 0 contains the names of each variable.
@@ -264,54 +265,57 @@ public class BasicProb {
                             // to check if we are on the specific var column
                             // in order to take the row we need from the matrix, we need to check each var values
                             // edge case - if the variable is evidence we will get number of options for values, with help from check_value_node(node) method
-                            if (!node_value.equals(cpt[i][j])) {
-                                // index_wanted_row=-1;
-                                break; // keep checking the next rows
-                            } else {
-                                index_wanted_row = i;
-                            }
-                        }
-                        for (BayesianNode parent : node.getParents()) {
-                            if (cpt[0][j].equals(parent.getVar().getName())) { // if we are in the parent column (check made_cpt() function for better understanding)
-                                // does it matter if the parent is evidence/ hidden/query?
-                                // the answer is yes, since we need to know how much values we need to search and calculate
-                                //                if (!check_node(parent).equals("hidden")) {
-                                // it doesn't matter if the parent of the node is hidden ,
-                                // because a hidden node can have all its values
-                                if (!check_value_node(parent).equals(cpt[i][j])) {
-                                    index_wanted_row = -1; // if the value in this row is right for the node but not for one of its' parents
+
+                                if (!node_value.equals(cpt[i][j])) {
+                                    // index_wanted_row=-1;
                                     break; // keep checking the next rows
                                 } else {
                                     index_wanted_row = i;
                                 }
-                            }
+
+                                for (BayesianNode parent : node.getParents()) {
+                                    if (cpt[0][j].equals(parent.getVar().getName())) { // if we are in the parent column (check made_cpt() function for better understanding)
+                                        // does it matter if the parent is evidence/ hidden/query?
+                                        // the answer is yes, since we need to know how much values we need to search and calculate
+                                        //                if (!check_node(parent).equals("hidden")) {
+                                        // it doesn't matter if the parent of the node is hidden ,
+                                        // because a hidden node can have all its values
+                                        if (!check_value_node(parent).equals(cpt[i][j])) {
+                                            index_wanted_row = -1; // if the value in this row is right for the node but not for one of its' parents
+                                            break; // keep checking the next rows
+                                        } else {
+                                            index_wanted_row = i;
+                                        }
+                                    }
 //                                else{
 //
 //                                }
 
+                                }
+
+                            }
+                            return Double.parseDouble(cpt[index_wanted_row][cpt[i].length - 1]); // col = the probabilities column is the last one
+
                         }
 
                     }
-                    return Double.parseDouble(cpt[index_wanted_row][cpt[i].length - 1]); // col = the probabilities column is the last one
-
                 }
-
-            }
-        }
 //                if(count_right_values==node.getParents().size() +1) {
 //                    return cpt[index_wanted_row][0]
 //                }
 
 
-        else { // if node has no parents
-            for (int i = 1; i < cpt.length; i++) {
-                if (node_value == cpt[i][1]) {
-                    node_prob = Double.parseDouble(cpt[i][cpt[i].length - 1]);
+        else{ // if node has no parents
+                    for (int i = 1; i < cpt.length; i++) {
+                        if (node_value == cpt[i][1]) {
+                            node_prob = Double.parseDouble(cpt[i][cpt[i].length - 1]);
+                        }
+                    }
                 }
-            }
-            return node_prob;
-        }
 
+                return node_prob;
+            }
+        }
 
         //}//
         return -1.0;
