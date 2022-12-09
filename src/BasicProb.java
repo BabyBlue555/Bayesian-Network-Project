@@ -16,8 +16,9 @@ public class BasicProb {
     ArrayList<String> hidden_vars;
     // ArrayList<String> hidden_values;
     ArrayList<Factor> factors;
-    int addition_counter = 1;
-    int mult_counter = 0;
+    int addition_counter = 0;
+  //  int mult_counter = 0;
+    int count_mult=0;
 
 
     // constructor
@@ -154,8 +155,34 @@ public class BasicProb {
 //        return hidden_values;
 //    }
 
+    public ArrayList<Double> calc_prob_hidden(BayesianNode hidden_node, String [][] cpt)
+    {
+        ArrayList<String> hidden_values=getHiddenValues(hidden_node.getVar().getName());
+        ArrayList<Integer> rowIndexes= new ArrayList<>();
+        ArrayList <Double> rowProbs= new ArrayList<>();
+        for( String value: hidden_values){
+        for(int i=1; i<cpt.length; i++){
+            for(int j=cpt[i].length-1; j>=0; j--){
+                if (cpt[0][j].equals(hidden_node.getVar().getName()){
 
-    public Double calcProb() {
+                        if(! cpt[i][j].equals(value)){
+                            continue;
+                        }
+                        else{
+                            rowIndexes.add(i);
+                        }
+                    }
+                }
+
+            }
+        }
+        for(Integer index: rowIndexes){
+            rowProbs.add(Double.valueOf(cpt[index][cpt[index].length-1]));
+        }
+            return rowProbs;
+    }
+
+    public Double calcTotalProb() {
 
         double total_probability = 0;
         double query_prob = 0;
@@ -163,7 +190,7 @@ public class BasicProb {
 //        ArrayList<Double> evidence_prob = new ArrayList<>();
 //        ArrayList<Double> hidden_prob = new ArrayList<>();
         double total_prob = 0;
-        int count_mult = 0;
+//        int count_mult = 0;
         // 1. make a list of all the variables of the net.
         //2. make a node for each variable in order to make a cpt
         //3. make cpt's in order to calculate the probabilities
@@ -172,7 +199,7 @@ public class BasicProb {
         //a. make cpt for query, and calculate its single probability
         BayesianNode queryNode = (BayesianNode) net.get_nodes().get(query_var); // check if its right!
         //BayesianNode query_node= queryNode;
-        String[][] query_cpt = queryNode.getFactor().make_CPT(queryNode);
+        String[][] query_cpt = net.make_CPT(queryNode);
         query_prob = prob_var(queryNode, query_cpt);
         // total_prob=query_prob;
 
@@ -180,48 +207,34 @@ public class BasicProb {
         for (String evidence : evidence_vars) {
             BayesianNode evidence_node = (BayesianNode) net.get_nodes().get(evidence);
             //  BayesianNode evidence_node= new BayesianNode(new Variable(evidence,evi))
-            String[][] evidence_cpt = evidence_node.getFactor().make_CPT(evidence_node);
+            String[][] evidence_cpt = net.make_CPT(evidence_node);
             evidence_prob *= prob_var(evidence_node, evidence_cpt); // multiply between each prob
             //  total_prob*=prob_evidence;
 
-            // count_mult++; // pay attention - it should be less than num of probabitities
+            count_mult++; // pay attention - it should be less than num of probabitities
 
         }
 
 
         //c. make cpt for all hiddens, and calculate its single probability
-        BayesianNode hidden_node = null;
-        String[] arr_vars = (String[]) hidden_vars.toArray();
-//        String [] arr_node_values = (String[]) hidden_node.getVar().getValues().toArray(); // array of the hidden var values
-
-        for (int i = 0; i < arr_vars.length; i++) {
-            hidden_node = (BayesianNode) net.get_nodes().get(arr_vars[i]);
-            String[][] hidden_cpt = hidden_node.getFactor().make_CPT(hidden_node);
-            for (String value : hidden_node.getVar().getValues()) {
-//                double hidden_prob = prob_var_hidden(hidden_node,value, hidden_cpt);
-//                //total_prob*=hidden_prob;
-//                total_prob += addition_prob(query_prob, evidence_prob, hidden_prob);
-//                count_mult = count_mult + 2;
+        for(String hidden: hidden_vars) {
+            BayesianNode hidden_node = (BayesianNode) net.get_nodes().get(hidden);
+            String[][] hidden_cpt  = net.make_CPT(hidden_node);
+            ArrayList<Double> hidden_probs = calc_prob_hidden(hidden_node,hidden_cpt);
+            for(double hidden_prob: hidden_probs) {
+                // calculte the total prob....
+                total_prob += query_prob * evidence_prob * hidden_prob;
             }
-
+            count_mult+=2;
+            addition_counter++;
         }
-//         for (String hidden : hidden_vars) {
-//             hidden_node = (BayesianNode) net.get_nodes().get(hidden);
-//            String[][] hidden_cpt = hidden_node.getFactor().make_CPT(hidden_node);
-//            // double prob_hidden =prob(hidden_node,hidden_cpt);
-//            //       _variables.add(hidden_node.getVar());
-//        }
-//
-//        String [] arr_node_values = (String[]) hidden_node.getVar().getValues().toArray(); // array of the hidden var values
-//        for(int i=0; i<arr_node_values.length;i++){
-//            String[][] hidden_cpt = hidden_node.getFactor().make_CPT(hidden_node);
-//            double prob_hidden =prob(hidden_node,hidden_cpt);
-//
-//        }
 
-        // calculte the total prob....
+
+
+
         //    return 1.0; // for now
-        return 1.0;
+        //return 1.0;
+        return total_prob;
     }
 
     // helping function
@@ -364,6 +377,10 @@ public class BasicProb {
         }
         return "query";
     }
+
+
+
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input.txt");
