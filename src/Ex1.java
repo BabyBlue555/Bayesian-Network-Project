@@ -24,7 +24,7 @@ public class Ex1
         BufferedWriter out = new BufferedWriter(new FileWriter(output));
         String XML_name = scanner.nextLine();
         BayesianNetwork net = BayesianNetwork.readXML(XML_name); //null pointer exception beacuse factor is null
-        System.out.println(net);
+        //  System.out.println(net);
         while(scanner.hasNextLine()){
             String line = scanner.nextLine();
 
@@ -33,7 +33,7 @@ public class Ex1
 //            String result = v_e.get_answer();
             BasicProb bs= new BasicProb(net,line);
 //            String result=bs.calcProb().toString();
-            String result=bs.queryValue;
+            String result= String.valueOf(bs.calcTotalProb());
             out.write(result);
         }
         if (scanner.hasNextLine()){
