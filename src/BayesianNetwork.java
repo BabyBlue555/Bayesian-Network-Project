@@ -113,7 +113,9 @@ public class BayesianNetwork {
         Hashtable nodes = net.get_nodes();
 
         BayesianNode cur_node = (BayesianNode) nodes.get(name_var); // get the current node from the hashtable by its variable name
-        if (isNull(cur_node)) {return;}
+        if (isNull(cur_node)) {
+            return;
+        }
 
         if (!isNull(cur_node)) {
             for (String parent : parents) {
@@ -123,7 +125,7 @@ public class BayesianNetwork {
         }
 
         // for all the parents of the current node , add the current node as a child to them
-        for (String parent : parents){
+        for (String parent : parents) {
             BayesianNode parent_node = (BayesianNode) net.get_nodes().get(parent);
             parent_node.addChildren(cur_node);
         }
@@ -203,7 +205,7 @@ public class BayesianNetwork {
             }
         }
 
-        String first_str=cpt[1][num_col-2]; // first cell of the node column - for example, of node A = "T"
+        String first_str = cpt[1][num_col - 2]; // first cell of the node column - for example, of node A = "T"
         for (int j = num_col - 3; j >= 0; j--) {
             for (BayesianNode parent : node.getParents()) {
                 value_index = 0; // for each parent node, start over
@@ -225,21 +227,20 @@ public class BayesianNetwork {
                             }
                             cpt[i][j] = values[previous_value_index];
                         }
-                    }
-                    else {
+                    } else {
 
                         if (cpt[1][j + 1].equals(cpt[i][j + 1]) && cpt[1][j + 2].equals(cpt[i][j + 2])) {
 
                             cpt[i][j] = values[value_index];
                             value_index = (value_index + 1) % values.length;
 
+                        } else {
+                            int previous_value_index = (value_index - 1) % values.length;
+                            if (previous_value_index < 0) {
+                                previous_value_index += values.length;
+                            }
+                            cpt[i][j] = values[previous_value_index];
                         }
-
-                        int previous_value_index = (value_index - 1) % values.length;
-                        if (previous_value_index < 0) {
-                            previous_value_index += values.length;
-                        }
-                        cpt[i][j] = values[previous_value_index];
 
                     }
 
@@ -249,15 +250,15 @@ public class BayesianNetwork {
         }
 
 
-                    return cpt;
+        return cpt;
 
 
-                } // end of make_cpt function
+    } // end of make_cpt function
 
 
-    public void printCpt(String[][] cpt){
-        for(int i=0; i<cpt.length;i++){
-            for(int j=0; j< cpt[i].length;j++){
+    public void printCpt(String[][] cpt) {
+        for (int i = 0; i < cpt.length; i++) {
+            for (int j = 0; j < cpt[i].length; j++) {
                 System.out.print(cpt[i][j] + "|");
             }
             System.out.println("\n");
