@@ -168,12 +168,12 @@ public class BayesianNetwork {
         BayesianNode[] arr =  node.getParents().toArray(new BayesianNode[0]);
         for (int j = num_col - 1; j >= 0; j--) {
             if (j == num_col - 1) {
-                continue;
+                continue; // no name for the probability column
             }
             else if (j == num_col - 2) {
                 CPT_query[0][j] = node.getVar().getName(); // the node column is the first column after the probabilities
             } else {
-                CPT_query[0][j] = arr[j].getVar().getName();
+                CPT_query[0][j] = arr[j].getVar().getName(); // otherwise, it's the parents' column
 
 //                    while (j >= 0) {
 //                        for (BayesianNode parent : node.getParents()) {
@@ -184,6 +184,7 @@ public class BayesianNetwork {
             }
         }
 
+        // fill the matrix with values and probabilities
         int value_index = 0;
         String[] values = node.getVar().getValues().toArray(new String[0]);
         for (int j = num_col - 1; j >= num_col - 2; j--) {
