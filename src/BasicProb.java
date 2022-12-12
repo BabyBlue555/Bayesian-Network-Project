@@ -463,6 +463,8 @@ public class BasicProb {
                                 //  ArrayList<Double> child_prob = new ArrayList<>();
                                 parent_values = parent.getVar().getValues().toArray(new String[0]);
                                 if (count_hidden < parent_values.length && count_value_hidden < parent_values.length) {
+                                  // check if its true for all cases!
+                                    // if not , fix it according to hidden_prob()
                                     if (check_parent(parent, curr_node)) {
                                         parent_value = parent_values[count_value_hidden % parent_values.length];
                                     } else {
