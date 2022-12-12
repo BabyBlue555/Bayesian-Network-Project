@@ -375,9 +375,9 @@ public class BasicProb {
         for (int i = 0; i < arr_hidden.length; i++) {
             // the index indicates the specific value of the hidden var that we need
             if (arr_hidden[num_hidden].equals(arr_hidden[i])) {
-                index = num_hidden;
-            } else {
                 index = count_value_hidden;
+            } else {
+                index = num_hidden;
             }
             BayesianNode hidden_node = (BayesianNode) net.get_nodes().get(arr_hidden[i]);
             String[][] hidden_cpt = net.make_CPT(hidden_node);
@@ -464,9 +464,9 @@ public class BasicProb {
                                 parent_values = parent.getVar().getValues().toArray(new String[0]);
                                 if (count_hidden < parent_values.length && count_value_hidden < parent_values.length) {
                                     if (check_parent(parent, curr_node)) {
-                                        parent_value = parent_values[count_hidden % parent_values.length];
-                                    } else {
                                         parent_value = parent_values[count_value_hidden % parent_values.length];
+                                    } else {
+                                        parent_value = parent_values[count_hidden % parent_values.length];
                                     }
                                 }
                             }
@@ -596,12 +596,13 @@ public static void main(String[]args)throws IOException{
         BayesianNetwork net=BayesianNetwork.readXML(XML_name); //null pointer exception beacuse factor is null
         System.out.println(net);
         while(scanner.hasNextLine()){
+            // make a condition that it will only do BasicProb if in the end of the line there is 1
         String line=scanner.nextLine();
         BasicProb bs=new BasicProb(net,line);
-        System.out.println(bs.hidden_vars);
+       // System.out.println(bs.hidden_vars);
         BayesianNode queryNode=(BayesianNode)net.get_nodes().get(bs.query_var); // returns the node in key query var - i.e, the query node
         String[][]cpt=net.make_CPT(queryNode);
-        net.printCpt(cpt);
+       // net.printCpt(cpt);
         double result=bs.calcTotalProb();
         System.out.println(result);
 //            for(String var_name: bs.hidden_vars) {
