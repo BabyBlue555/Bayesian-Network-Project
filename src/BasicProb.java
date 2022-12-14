@@ -275,7 +275,7 @@ public class BasicProb {
 
         //      }
 
-        numerator = total_calc(null, "numerator");
+        numerator = total_calc(null, "numerator",-1);
 
         // for normalization:
         BayesianNode queryNode = (BayesianNode) net.get_nodes().get(query_var); // check if its right!
@@ -283,6 +283,7 @@ public class BasicProb {
         ArrayList<Double> query_probs = new ArrayList<>();
 
 //        for (double prob : query_probs) {
+        int index_denom=0;
         for (String value : queryNode.getVar().getValues()) {
             if (!value.equals(queryValue)) {
                 // create a new node that its value is only one of
@@ -294,9 +295,11 @@ public class BasicProb {
                 BayesianNode denom_node = new BayesianNode(var);
                 //calculates the given probs of all the other query values
                 // that aren't the value in the .txt
-                denominator += total_calc(denom_node, "denominator");
+                denominator += total_calc(denom_node, "denominator",index_denom);
                 addition_counter++;
+
             }
+            index_denom++;
         }
 //        }
 
@@ -307,54 +310,97 @@ public class BasicProb {
     }
 
 
-    public Double total_calc(BayesianNode denomNode, String flag) {
+    public Double total_calc(BayesianNode denomNode, String flag, int index_denom) {
         //c. make cpt for all hiddens, and calculate its single probability
         double total_prob = 0;
         double query_prob = 0;
-        double evidence_prob = 0;// will storage the multiplication of all the evidence probabilities
+        double evidence_prob = 1;// will storage the multiplication of all the evidence probabilities
+        double hidden_prob=1;
         double numerator = 0.0;
-        int num_hidden = 0;
+       // int num_hidden = 0;
         BayesianNode queryNode = (BayesianNode) net.get_nodes().get(query_var); // check if its right!
-        //BayesianNode query_node= queryNode;
         String[][] query_cpt = net.make_CPT(queryNode);
-        for (String hidden : hidden_vars) {
-            BayesianNode curr_node = (BayesianNode) net.get_nodes().get(hidden);
-            String[][] hidden_cpt = net.make_CPT(curr_node);
+//        for (String hidden : hidden_vars) {
+        String[][] hidden_values_table = hidden_prob_table();
+        for (int i = 1; i < hidden_values_table.length; i++) {
+            evidence_prob=1;
+            hidden_prob=1;
+            query_prob=0;
 
-            // turns to zero evertime we go to the next hidden var
-            int count_value_hidden = 0; // in order to calculate the evidence prob
-            int size_hidden_values = curr_node.getVar().getValues().size();
-            // for (double prob : hidden_probs) {
-            for (String value : curr_node.getVar().getValues()) {
-                evidence_prob = 1;
-                // calculte the total prob....
-                count_value_hidden = count_value_hidden % size_hidden_values;
-                if (flag.equals("numerator")) {
-                    query_prob = prob_var(queryNode, curr_node, count_value_hidden, num_hidden, query_cpt);
+            if (flag.equals("numerator")) {
+                    query_prob = prob_var(queryNode, query_cpt, hidden_values_table,i,index_denom);
                 } else {
-                    query_prob = prob_var(denomNode, curr_node, count_value_hidden, num_hidden, query_cpt);
-                    ;
+                if(index_denom!=-1)
+                    query_prob = prob_var(denomNode, query_cpt,hidden_values_table,i,index_denom);
+
                 }
                 for (String evidence : evidence_vars) {
                     BayesianNode evidence_node = (BayesianNode) net.get_nodes().get(evidence);
                     String[][] evidence_cpt = net.make_CPT(evidence_node);
-                    evidence_prob *= prob_var(evidence_node, curr_node, count_value_hidden, num_hidden, evidence_cpt);
+                    evidence_prob *= prob_var(evidence_node,evidence_cpt, hidden_values_table,i,index_denom);
                     count_mult++;
                     // the multiplication of all the evidence probs for a specific addition
                 }
 
-                numerator += query_prob * evidence_prob * hidden_prob(curr_node, num_hidden, count_value_hidden);
-                count_value_hidden++;
-                count_mult += 2;
-                addition_counter++;
-                //}
+            for(int j=0; j<hidden_values_table[i].length; j++) {
+                BayesianNode hidden_node = (BayesianNode) net.get_nodes().get(hidden_values_table[0][j]);
+                String[][] hidden_cpt = net.make_CPT(hidden_node);
+                ArrayList<String> values = new ArrayList<>();
+                // ArrayList<BayesianNode> parents = new ArrayList<>();
+                BayesianNode[] parents;
+                values.add(hidden_values_table[i][j]);
+                Variable var = new Variable(hidden_values_table[0][j], values);
+                BayesianNode new_hidden = new BayesianNode(var);
+                parents = hidden_node.getParents().toArray(new BayesianNode[0]);
+
+                //  for (BayesianNode parent : parents) {
+                // start from last parent from the xml , since it is backwards in the cpt.
+                for (int k = parents.length - 1; k >= 0; k--) {
+                    new_hidden.addParents(parents[k]);
+                }
+
+                hidden_prob*=prob_var(new_hidden,hidden_cpt,hidden_values_table,i,index_denom);
             }
-            num_hidden++;
+
+            numerator += query_prob* evidence_prob *hidden_prob;
         }
-//        System.out.println("number of multiplications: " + count_mult);
-//        System.out.println("number of additions: " + addition_counter);
         return numerator;
     }
+
+//            // turns to zero evertime we go to the next hidden var
+//            int count_value_hidden = 0; // in order to calculate the evidence prob
+//            int size_hidden_values = curr_node.getVar().getValues().size();
+//            // for (double prob : hidden_probs) {
+  //          for (String value : curr_node.getVar().getValues()) {
+//                evidence_prob = 1;
+//                // calculte the total prob....
+//                count_value_hidden = count_value_hidden % size_hidden_values;
+//                if (flag.equals("numerator")) {
+//                    query_prob = prob_var(queryNode, query_cpt,);
+//                } else {
+//                    query_prob = prob_var(denomNode, curr_node, count_value_hidden, num_hidden, query_cpt);
+//
+//                }
+//                for (String evidence : evidence_vars) {
+//                    BayesianNode evidence_node = (BayesianNode) net.get_nodes().get(evidence);
+//                    String[][] evidence_cpt = net.make_CPT(evidence_node);
+//                    evidence_prob *= prob_var(evidence_node, curr_node, count_value_hidden, num_hidden, evidence_cpt);
+//                    count_mult++;
+//                    // the multiplication of all the evidence probs for a specific addition
+//                }
+//
+//                numerator += query_prob * evidence_prob * hidden_prob(curr_node, num_hidden, count_value_hidden);
+//                count_value_hidden++;
+//                count_mult += 2;
+//                addition_counter++;
+//                //}
+//            }
+//            num_hidden++;
+//        }
+////        System.out.println("number of multiplications: " + count_mult);
+////        System.out.println("number of additions: " + addition_counter);
+//        return numerator;
+//    }
 
     public boolean check_parent(BayesianNode parent, BayesianNode curr_node) {
         // int index_parent=0;
@@ -368,66 +414,137 @@ public class BasicProb {
 
     // helping function - is used in every iteration of the hidden_vars
     // when the numenator/ denominator is calculated.
-    public double hidden_prob(BayesianNode curr_node, int num_hidden, int count_value_hidden) {
-        double prob = 1;
-        int index = 0;
-        String[] arr_hidden = hidden_vars.toArray(new String[0]);
-        for (int i = 0; i < arr_hidden.length; i++) {
-            // the index indicates the specific value of the hidden var that we need
-            if (arr_hidden[num_hidden].equals(arr_hidden[i])) {
-                index = count_value_hidden;
-            } else {
-                index = num_hidden;
-            }
-            BayesianNode hidden_node = (BayesianNode) net.get_nodes().get(arr_hidden[i]);
-            String[][] hidden_cpt = net.make_CPT(hidden_node);
-            //   Double[] hidden_probs = calc_prob_values(hidden_node, hidden_cpt).toArray(new Double[0]);
-            String[] arr_values = getHiddenValues(arr_hidden[i]).toArray(new String[0]);
-
-            for (int j = 0; j < arr_values.length; j++) {
-                if (j == index) {
-                    // creating a new node for using prob_var()
-                    ArrayList<String> values = new ArrayList<>();
-                    // ArrayList<BayesianNode> parents = new ArrayList<>();
-                    BayesianNode[] parents;
-                    values.add(arr_values[j]);
-                    Variable var = new Variable(arr_hidden[i], values);
-                    BayesianNode new_hidden = new BayesianNode(var);
-                    parents = hidden_node.getParents().toArray(new BayesianNode[0]);
-
-                    //  for (BayesianNode parent : parents) {
-                    // start from last parent from the xml , since it is backwards in the cpt.
-                    for (int k = parents.length - 1; k >= 0; k--) {
-                        new_hidden.addParents(parents[k]);
-                    }
-                    // }
-                    prob *= prob_var(new_hidden, curr_node, count_value_hidden, num_hidden, hidden_cpt);
-                    count_mult++;
-                }
-                // the goal is to calculate for each hidden var, only the prob
-                //for the current value of the addition in the numerator/ denominator
-                // prob *= hidden_probs[index % arr_values.length];
-            }
-        }
-
-        return prob;
-    }
-
-
-//    public Double prob_var_hidden(BayesianNode node, String value, String[][] cpt) {
+//    public double hidden_prob_old(BayesianNode curr_node, int num_hidden, int count_value_hidden) {
+//        double prob = 1;
+//        int index = 0;
+//        String[] arr_hidden = hidden_vars.toArray(new String[0]);
+//        for (int i = 0; i < arr_hidden.length; i++) {
+//            // the index indicates the specific value of the hidden var that we need
+//            if (arr_hidden[num_hidden].equals(arr_hidden[i])) {
+//                index = count_value_hidden;
+//            } else {
+//                index = num_hidden;
+//            }
+//            BayesianNode hidden_node = (BayesianNode) net.get_nodes().get(arr_hidden[i]);
+//            String[][] hidden_cpt = net.make_CPT(hidden_node);
+//            //   Double[] hidden_probs = calc_prob_values(hidden_node, hidden_cpt).toArray(new Double[0]);
+//            String[] arr_values = getHiddenValues(arr_hidden[i]).toArray(new String[0]);
 //
+//            for (int j = 0; j < arr_values.length; j++) {
+//                if (j == index) {
+//                    // creating a new node for using prob_var()
+//                    ArrayList<String> values = new ArrayList<>();
+//                    // ArrayList<BayesianNode> parents = new ArrayList<>();
+//                    BayesianNode[] parents;
+//                    values.add(arr_values[j]);
+//                    Variable var = new Variable(arr_hidden[i], values);
+//                    BayesianNode new_hidden = new BayesianNode(var);
+//                    parents = hidden_node.getParents().toArray(new BayesianNode[0]);
 //
+//                    //  for (BayesianNode parent : parents) {
+//                    // start from last parent from the xml , since it is backwards in the cpt.
+//                    for (int k = parents.length - 1; k >= 0; k--) {
+//                        new_hidden.addParents(parents[k]);
+//                    }
+//                    // }
+//                    prob *= prob_var(new_hidden, curr_node, count_value_hidden, num_hidden, hidden_cpt);
+//                    count_mult++;
+//                }
+//                // the goal is to calculate for each hidden var, only the prob
+//                //for the current value of the addition in the numerator/ denominator
+//                // prob *= hidden_probs[index % arr_values.length];
+//            }
+//        }
 //
+//        return prob;
 //    }
 
+
+    public String[][] hidden_prob_table() {
+
+        String[] arr_hidden = hidden_vars.toArray(new String[0]);
+        int mult_hiddens = 1;
+        String[] arr_values= new String[0];
+        int value_index = 0;
+        String first_str = null;
+
+
+        for (int j = 0; j < arr_hidden.length; j++) {
+            arr_values = getHiddenValues(arr_hidden[j]).toArray(new String[0]);
+            mult_hiddens *= arr_values.length;
+
+        }
+        String[][] arr_new_values= new String[mult_hiddens+1][arr_hidden.length];
+        for (int j = 0; j < arr_hidden.length; j++) // "columns" = number of hidden variables
+        {
+            value_index = 0;
+            for (int i = 0; i <= mult_hiddens; i++) // number of "rows" = mult of values of all the hiddens
+            {
+                // i==0 - put the hidden vars names to identify on prob_var(..)
+                if (i == 0) {
+                    arr_new_values[0][j] = arr_hidden[j]; // name of the variable
+
+                } else {
+                    if (j == 0) { // first hidden variable
+
+                        arr_new_values[i][j] = arr_values[value_index];
+                        value_index = (value_index + 1) % arr_values.length;
+                        first_str = arr_new_values[1][0]; // not necessary
+
+                    } else if (j == 1) {
+                        if (arr_new_values[i][j - 1].equals(arr_new_values[1][0])) {
+                            arr_new_values[i][j] = arr_values[value_index];
+                            value_index = (value_index + 1) % arr_values.length;
+                        } else {
+
+                            int previous_value_index = (value_index - 1) % arr_values.length;
+                            if (previous_value_index < 0) {
+                                previous_value_index += arr_values.length;
+                            }
+                            arr_new_values[i][j] = arr_values[previous_value_index];
+
+                        }
+
+
+                    } else { // all the other columns
+
+
+                        if (arr_new_values[1][j - 1].equals(arr_new_values[i][j - 1]) && arr_new_values[1][j - 2].equals(arr_new_values[i][j - 2])) {
+
+                            arr_new_values[i][j] = arr_values[value_index];
+                            value_index = (value_index + 1) % arr_values.length;
+                        } else {
+                            int previous_value_index = (value_index - 1) % arr_values.length;
+                            if (previous_value_index < 0) {
+                                previous_value_index += arr_values.length;
+                            }
+                            arr_new_values[i][j] = arr_values[previous_value_index];
+
+                        }
+
+                    }
+
+
+                }
+            }
+        }
+        return arr_new_values;  // meantime
+    }
+
     // find the probability of a specific variable with a given value (given its parents)
-    public Double prob_var(BayesianNode node, BayesianNode curr_node, int count_value_hidden, int count_hidden, String[][] cpt) {
+    public Double prob_var(BayesianNode node, String[][] cpt, String [][] hidden_table,int index_hidden,int index_denom) {
         double node_prob = 0;
         boolean flag_parents = false;
         String node_value = check_value_node(node); // returns the value
-        if (node_value.equals("-1")) {
+        if (node_value.equals("-1") || (node.getVar().getValues().size()==1)) {
             // i.e, hidden case
             node_value = node.getVar().getValues().toString().split("\\[")[1].split("]")[0];
+        }
+        else{
+            if(index_denom!=-1){
+                String  []arr_val=node.getVar().getValues().toArray(new String[0]);
+                node_value=arr_val[index_denom];
+            }
         }
         //  int count_right_values=0;
         int index_wanted_row = -1;
@@ -451,27 +568,38 @@ public class BasicProb {
                             }
                         }
 
+                     //   String [] parents= node.getParents().toArray(new String[0]);
                         for (BayesianNode parent : node.getParents()) {
-                            flag_parents=false;
+                            flag_parents = false;
                             String parent_value = "";
                             if (!check_node(parent).equals("hidden")) {
                                 parent_value = check_value_node(parent);
 
-                            } else {
-                                String[] parent_values;
-                                //  String parent_value=null;
-                                //  ArrayList<Double> child_prob = new ArrayList<>();
-                                parent_values = parent.getVar().getValues().toArray(new String[0]);
-                                if (count_hidden < parent_values.length && count_value_hidden < parent_values.length) {
-                                  // check if its true for all cases!
-                                    // if not , fix it according to hidden_prob()
-                                    if (check_parent(parent, curr_node)) {
-                                        parent_value = parent_values[count_value_hidden % parent_values.length];
-                                    } else {
-                                        parent_value = parent_values[count_hidden % parent_values.length];
+                            }
+
+                            else {
+                               // String[] parent_values;
+                              //  parent_values = parent.getVar().getValues().toArray(new String[0]);
+                                for(int k=0; k<hidden_table[index_hidden].length;k++){
+                                   if(hidden_table[0][k].equals( parent.getVar().getName())){
+
+                                       parent_value=hidden_table[index_hidden][k];
+
                                     }
                                 }
+
                             }
+
+//                                if (count_hidden < parent_values.length && count_value_hidden < parent_values.length) {
+//                                    // check if its true for all cases!
+//                                    // if not , fix it according to hidden_prob()
+//                                    if (check_parent(parent, curr_node)) {
+//                                        parent_value = parent_values[count_value_hidden % parent_values.length];
+//                                    } else {
+//                                        parent_value = parent_values[count_hidden % parent_values.length];
+//                                    }
+//                                }
+
 
                             if (cpt[0][j].equals(parent.getVar().getName())) { // if we are in the parent column (check made_cpt() function for better understanding)
                                 // does it matter if the parent is evidence/ hidden/query?
@@ -501,28 +629,23 @@ public class BasicProb {
 
             }
 
-//                if(index_wanted_row >0) {
-//                    return Double.parseDouble(cpt[index_wanted_row][cpt[index_wanted_row].length - 1]); // col = the probabilities column is the last one
-//                }
-//                else{
-//                    return 1.0;
-//                }
-         else { // if node has no parents
-             // index out of bounds exception - index_wanted_row = -1 - invalid array index
+
+            else { // if node has no parents
+                // index out of bounds exception - index_wanted_row = -1 - invalid array index
                 // fix it.
-            for (int i = 1; i < cpt.length; i++) {
-                if (node_value.equals(cpt[i][0])) {
-                    node_prob = Double.parseDouble(cpt[i][cpt[i].length - 1]);
+                for (int i = 1; i < cpt.length; i++) {
+                    if (node_value.equals(cpt[i][0])) {
+                          node_prob = Double.parseDouble(cpt[i][cpt[i].length - 1]);
+                    }
                 }
             }
+
+            return node_prob;
         }
 
-        return node_prob;
+
+        return -1.0; // if node_value is null
     }
-
-
-        return-1.0; // if node_value is null
-}
 
 
     // return the value of  certein node, given its type
@@ -581,38 +704,38 @@ public class BasicProb {
     //file =
     static Scanner scanner;
 
-static {
-        try{
-        scanner=new Scanner(file);
-        }catch(FileNotFoundException e){
-        System.out.println("An error occurred with file reading.");
-        e.printStackTrace();
+    static {
+        try {
+            scanner = new Scanner(file);
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred with file reading.");
+            e.printStackTrace();
         }
-        }
+    }
 
 
-public static void main(String[]args)throws IOException{
-        File output=new File("output.txt");
-        BufferedWriter out=new BufferedWriter(new FileWriter(output));
-        String XML_name=scanner.nextLine();
-        BayesianNetwork net=BayesianNetwork.readXML(XML_name); //null pointer exception beacuse factor is null
+    public static void main(String[] args) throws IOException {
+        File output = new File("output.txt");
+        BufferedWriter out = new BufferedWriter(new FileWriter(output));
+        String XML_name = scanner.nextLine();
+        BayesianNetwork net = BayesianNetwork.readXML(XML_name); //null pointer exception beacuse factor is null
         System.out.println(net);
-        while(scanner.hasNextLine()){
+        while (scanner.hasNextLine()) {
             // make a condition that it will only do BasicProb if in the end of the line there is 1
-        String line=scanner.nextLine();
-        BasicProb bs=new BasicProb(net,line);
-       // System.out.println(bs.hidden_vars);
-        BayesianNode queryNode=(BayesianNode)net.get_nodes().get(bs.query_var); // returns the node in key query var - i.e, the query node
-        String[][]cpt=net.make_CPT(queryNode);
-       // net.printCpt(cpt);
-        double result=bs.calcTotalProb();
-        System.out.println(result);
+            String line = scanner.nextLine();
+            BasicProb bs = new BasicProb(net, line);
+            // System.out.println(bs.hidden_vars);
+            BayesianNode queryNode = (BayesianNode) net.get_nodes().get(bs.query_var); // returns the node in key query var - i.e, the query node
+            String[][] cpt = net.make_CPT(queryNode);
+            // net.printCpt(cpt);
+            double result = bs.calcTotalProb();
+            System.out.println(result);
 //            for(String var_name: bs.hidden_vars) {
 //                System.out.println(bs.getHiddenValues(var_name));
 //            }
         }
-        }
+    }
 
-        }
+}
 
 
