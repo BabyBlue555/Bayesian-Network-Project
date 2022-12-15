@@ -234,12 +234,14 @@ public class BayesianNetwork {
                             }
                         } else {
 
-                            if (cpt[1][j + 1].equals(cpt[i][j + 1]) && cpt[1][j + 2].equals(cpt[i][j + 2])) {
-
+                       //     if (cpt[1][j + 1].equals(cpt[i][j + 1]) && cpt[1][j + 2].equals(cpt[i][j + 2])) {
+                            if(cpt_value_rec(cpt,i,j, num_col)) {
                                 cpt[i][j] = values[value_index];
                                 value_index = (value_index + 1) % values.length;
 
-                            } else {
+                                //  }
+                            }
+                        else {
                                 int previous_value_index = (value_index - 1) % values.length;
                                 if (previous_value_index < 0) {
                                     previous_value_index += values.length;
@@ -259,6 +261,24 @@ public class BayesianNetwork {
 
 
     } // end of make_cpt function
+
+    private boolean cpt_value_rec(String[][] cpt, int i, int j, int num_col) {
+
+
+            if(j == num_col - 3){
+                return true;
+            }
+            else if(!cpt[1][j + 1].equals(cpt[i][j + 1]) || !cpt[1][j + 2].equals(cpt[i][j + 2])){
+
+                return false;
+            }
+            else{
+                return cpt_value_rec(cpt,i, j+1, num_col);
+            }
+        }
+
+
+
 
 
     public void printCpt(String[][] cpt) {
