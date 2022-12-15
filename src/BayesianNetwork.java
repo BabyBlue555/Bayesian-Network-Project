@@ -211,10 +211,15 @@ public class BayesianNetwork {
             }
 
             String first_str = cpt[1][num_col - 2]; // first cell of the node column - for example, of node A = "T"
+            int index_par=node.getParents().size()-1;
             for (int j = num_col - 3; j >= 0; j--) {
-                for (BayesianNode parent : node.getParents()) {
+                //for (BayesianNode parent : node.getParents()) {
+                BayesianNode [] arr_par= node.getParents().toArray(new BayesianNode[0]);
+            //    for(int par=0;par<= arr_par.length;par++)
                     value_index = 0; // for each parent node, start over
-                    values = parent.getVar().getValues().toArray(new String[0]);
+                    if(index_par>=0) {
+                        values = arr_par[index_par].getVar().getValues().toArray(new String[0]);
+                    }
                     for (int i = 1; i < num_rows; i++) {
 
                         // edge case - the nearest column to the node column : j= num_col-3
@@ -253,7 +258,8 @@ public class BayesianNetwork {
 
 
                     }
-                }
+              //  }
+                index_par--;
             }
         }
 
