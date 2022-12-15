@@ -1,3 +1,6 @@
+import com.sun.prism.impl.FactoryResetException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class BayesianNode {
@@ -8,14 +11,12 @@ public class BayesianNode {
     private ArrayList<BayesianNode> children;
 
     public BayesianNode(Variable var) {
-       // setVar(var);
+        // setVar(var);
         this.var = var;
         this.parents = new ArrayList<>(); // because it is a complexed type
         this.children = new ArrayList<>();
-        this.factor=new Factor();
-        this.factor.var_values=var.getValues();
-
-
+        this.factor = new Factor();
+        //////// fix!!!!!!!!!
 
 
     }
@@ -24,12 +25,13 @@ public class BayesianNode {
         this.var = var;
     }
 
-    public void setFactor(ArrayList<Variable> vars, ArrayList<Double> probs) {
-        this.factor= new Factor(vars,probs);
+    public void setFactor(ArrayList<Variable> vars, ArrayList<Double> probs, ArrayList<String> var_values) {
+        this.factor = new Factor(vars, probs, var_values);
         //this.factor= new Factor(vars,probabilities);
-        this.factor.var_values=var.getValues();
+//        this.factor.var_values=var.getValues();
 
     }
+
     public void setFactor(Factor factor) {
         this.factor = factor;
     }
@@ -59,9 +61,6 @@ public class BayesianNode {
     }
     //variable - name and values
     // factor
-
-
-
 
 
     // parents - optional
@@ -97,8 +96,26 @@ public class BayesianNode {
 
     }
 
+
+    // checking null exceptions
+    public static void main(String[] args) throws IOException {
+        try {
+                Variable var= new Variable("t",new ArrayList<>() );
+                BayesianNode node= new BayesianNode(var);
+                node.factor=new Factor();
+                node.getParents();
+
+            System.out.println(node);
+            System.out.println(node.factor);
+             //   Factor fact= new Factor();
+        }
+        catch (NullPointerException e) {
+            e.printStackTrace();
+            System.out.println("null error ");
+        }
+
+
+    }
+
+
 }
-
-
-
-

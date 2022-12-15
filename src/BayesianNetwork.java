@@ -89,7 +89,7 @@ public class BayesianNetwork {
             net.addNode(var_name, node);
         } catch (NullPointerException e) {
             e.printStackTrace();
-            System.out.println("Office ladies");
+            System.out.println("null error");
         }
     }
 
@@ -142,11 +142,12 @@ public class BayesianNetwork {
             varsOfFactor.add(((BayesianNode) net.get_nodes().get(parent)).getVar());
         }
 
-        //
+
         if (!isNull(cur_node)) {
             Variable var = cur_node.getVar();
             varsOfFactor.add(var);
-            Factor f = new Factor(varsOfFactor, probs);
+            ArrayList<String> var_values= new ArrayList<>();
+            Factor f = new Factor(varsOfFactor, probs, var_values);
             cur_node.setFactor(f);
         }
     }
@@ -154,27 +155,31 @@ public class BayesianNetwork {
 
     public String[][] make_CPT(BayesianNode node) {
 
-        int num_parents = node.getParents().size();
-        int num_col = num_parents + 2; // 2 = one query and probability column
-        int num_rows = node.getVar().getValues().size();
-        if (num_parents > 0) {
-            for (BayesianNode parent : node.getParents()) {
-                num_rows *= parent.getVar().getValues().size();
-            }
-        }
-        num_rows++; // because we want to have a row for the variable names
-        String[][] cpt = new String[num_rows][num_col];
+        // null pointer exception found!
+        String[][] cpt=null;
+        if (node != null) {
 
-        // putting values in the matrix
-        //a. putting names of vars in the first row
-        BayesianNode[] arr = node.getParents().toArray(new BayesianNode[0]);
-        for (int j = num_col - 1; j >= 0; j--) {
-            if (j == num_col - 1) {
-                continue; // no name for the probability column
-            } else if (j == num_col - 2) {
-                cpt[0][j] = node.getVar().getName(); // the node column is the first column after the probabilities
-            } else {
-                cpt[0][j] = arr[j].getVar().getName(); // otherwise, it's the parents' column
+            int num_parents = node.getParents().size();
+            int num_col = num_parents + 2; // 2 = one query and probability column
+            int num_rows = node.getVar().getValues().size();
+            if (num_parents > 0) {
+                for (BayesianNode parent : node.getParents()) {
+                    num_rows *= parent.getVar().getValues().size();
+                }
+            }
+            num_rows++; // because we want to have a row for the variable names
+             cpt = new String[num_rows][num_col];
+
+            // putting values in the matrix
+            //a. putting names of vars in the first row
+            BayesianNode[] arr = node.getParents().toArray(new BayesianNode[0]);
+            for (int j = num_col - 1; j >= 0; j--) {
+                if (j == num_col - 1) {
+                    continue; // no name for the probability column
+                } else if (j == num_col - 2) {
+                    cpt[0][j] = node.getVar().getName(); // the node column is the first column after the probabilities
+                } else {
+                    cpt[0][j] = arr[j].getVar().getName(); // otherwise, it's the parents' column
 
 //                    while (j >= 0) {
 //                        for (BayesianNode parent : node.getParents()) {
@@ -182,73 +187,73 @@ public class BayesianNetwork {
 //                        }
 //                        j--;
 //                    }
-            }
-        }
-
-        // fill the last column of the matrix with probabilities
-        int value_index = 0;
-        String[] values = node.getVar().getValues().toArray(new String[0]);
-        for (int j = num_col - 1; j >= num_col - 2; j--) {
-            for (int i = 1; i < num_rows; i++) {
-                if (j == num_col - 1) { // column of probabilities
-                    for (Double prob : node.getFactor().getProbabilities()) {
-                        if (i < num_rows) {
-                            cpt[i][j] = String.valueOf(prob); // convert double to string
-                            i++;
-                        }
-                    }
-                    // fill the columns of node with its values
-                } else if (j == num_col - 2) { // column of query
-                    cpt[i][j] = values[value_index];
-                    value_index = (value_index + 1) % values.length; // in order to have a " TFTFTF..." sequence
                 }
             }
-        }
 
-        String first_str = cpt[1][num_col - 2]; // first cell of the node column - for example, of node A = "T"
-        for (int j = num_col - 3; j >= 0; j--) {
-            for (BayesianNode parent : node.getParents()) {
-                value_index = 0; // for each parent node, start over
-                values = parent.getVar().getValues().toArray(new String[0]);
+            // fill the last column of the matrix with probabilities
+            int value_index = 0;
+            String[] values = node.getVar().getValues().toArray(new String[0]);
+            for (int j = num_col - 1; j >= num_col - 2; j--) {
                 for (int i = 1; i < num_rows; i++) {
+                    if (j == num_col - 1) { // column of probabilities
+                        for (Double prob : node.getFactor().getProbabilities()) {
+                            if (i < num_rows) {
+                                cpt[i][j] = String.valueOf(prob); // convert double to string
+                                i++;
+                            }
+                        }
+                        // fill the columns of node with its values
+                    } else if (j == num_col - 2) { // column of query
+                        cpt[i][j] = values[value_index];
+                        value_index = (value_index + 1) % values.length; // in order to have a " TFTFTF..." sequence
+                    }
+                }
+            }
 
-                    // edge case - the nearest column to the node column : j= num_col-3
-                    if (j == num_col - 3) {
+            String first_str = cpt[1][num_col - 2]; // first cell of the node column - for example, of node A = "T"
+            for (int j = num_col - 3; j >= 0; j--) {
+                for (BayesianNode parent : node.getParents()) {
+                    value_index = 0; // for each parent node, start over
+                    values = parent.getVar().getValues().toArray(new String[0]);
+                    for (int i = 1; i < num_rows; i++) {
 
-                        if (cpt[i][num_col - 2].equals(first_str)) {
+                        // edge case - the nearest column to the node column : j= num_col-3
+                        if (j == num_col - 3) {
 
-                            cpt[i][j] = values[value_index];
-                            value_index = (value_index + 1) % values.length;
+                            if (cpt[i][num_col - 2].equals(first_str)) {
+
+                                cpt[i][j] = values[value_index];
+                                value_index = (value_index + 1) % values.length;
+                            } else {
+
+                                int previous_value_index = (value_index - 1) % values.length;
+                                if (previous_value_index < 0) {
+                                    previous_value_index += values.length;
+                                }
+                                cpt[i][j] = values[previous_value_index];
+                            }
                         } else {
 
-                            int previous_value_index = (value_index - 1) % values.length;
-                            if (previous_value_index < 0) {
-                                previous_value_index += values.length;
+                            if (cpt[1][j + 1].equals(cpt[i][j + 1]) && cpt[1][j + 2].equals(cpt[i][j + 2])) {
+
+                                cpt[i][j] = values[value_index];
+                                value_index = (value_index + 1) % values.length;
+
+                            } else {
+                                int previous_value_index = (value_index - 1) % values.length;
+                                if (previous_value_index < 0) {
+                                    previous_value_index += values.length;
+                                }
+                                cpt[i][j] = values[previous_value_index];
                             }
-                            cpt[i][j] = values[previous_value_index];
+
                         }
-                    } else {
 
-                        if (cpt[1][j + 1].equals(cpt[i][j + 1]) && cpt[1][j + 2].equals(cpt[i][j + 2])) {
-
-                            cpt[i][j] = values[value_index];
-                            value_index = (value_index + 1) % values.length;
-
-                        } else {
-                            int previous_value_index = (value_index - 1) % values.length;
-                            if (previous_value_index < 0) {
-                                previous_value_index += values.length;
-                            }
-                            cpt[i][j] = values[previous_value_index];
-                        }
 
                     }
-
-
                 }
             }
         }
-
 
         return cpt;
 

@@ -258,6 +258,7 @@ public class BasicProb {
         for (int j = 0; j < arr_hidden.length; j++) // "columns" = number of hidden variables
         {
             value_index = 0;
+            arr_values= getHiddenValues(arr_hidden[j]).toArray(new String[0]);
             for (int i = 0; i <= mult_hiddens; i++) // number of "rows" = mult of values of all the hiddens
             {
                 // i==0 - put the hidden vars names to identify on prob_var(..)
@@ -265,51 +266,69 @@ public class BasicProb {
                     arr_new_values[0][j] = arr_hidden[j]; // name of the variable
 
                 } else {
-                    if (j == 0) { // first hidden variable
-
+                    if (j == 0 ) { // first hidden variable
+                     //   break;
                         arr_new_values[i][j] = arr_values[value_index];
                         value_index = (value_index + 1) % arr_values.length;
                         first_str = arr_new_values[1][0]; // not necessary
 
-                    } else if (j == 1) {
+                    } else if (j == 1 ) {
+                     //   break;
                         if (arr_new_values[i][j - 1].equals(arr_new_values[1][0])) {
                             arr_new_values[i][j] = arr_values[value_index];
                             value_index = (value_index + 1) % arr_values.length;
                         } else {
 
-                            int previous_value_index = (value_index - 1) % arr_values.length;
-                            if (previous_value_index < 0) {
-                                previous_value_index += arr_values.length;
-                            }
-                            arr_new_values[i][j] = arr_values[previous_value_index];
+                                int previous_value_index = (value_index - 1) % arr_values.length;
+                                if (previous_value_index < 0) {
+                                    previous_value_index += arr_values.length;
+                                }
+                                arr_new_values[i][j] = arr_values[previous_value_index];
 
+                            }
                         }
 
+                    else { // all the other columns
 
-                    } else { // all the other columns
+                            // if (arr_new_values[1][j - 1].equals(arr_new_values[i][j - 1]) && arr_new_values[1][j - 2].equals(arr_new_values[i][j - 2])) {
+                            if (table_value_rec(arr_new_values, i, j)) {
+                                arr_new_values[i][j] = arr_values[value_index];
+                                value_index = (value_index + 1) % arr_values.length;
+                            } else {
+                                int previous_value_index = (value_index - 1) % arr_values.length;
+                                if (previous_value_index < 0) {
+                                    previous_value_index += arr_values.length;
+                                }
+                                arr_new_values[i][j] = arr_values[previous_value_index];
 
 
-                        if (arr_new_values[1][j - 1].equals(arr_new_values[i][j - 1]) && arr_new_values[1][j - 2].equals(arr_new_values[i][j - 2])) {
-
-                            arr_new_values[i][j] = arr_values[value_index];
-                            value_index = (value_index + 1) % arr_values.length;
-                        } else {
-                            int previous_value_index = (value_index - 1) % arr_values.length;
-                            if (previous_value_index < 0) {
-                                previous_value_index += arr_values.length;
-                            }
-                            arr_new_values[i][j] = arr_values[previous_value_index];
 
                         }
 
                     }
-
-
                 }
+
             }
         }
         return arr_new_values;  // meantime
     }
+
+    // helping function for hidden_prob(). checks if we should change the value of the current var,
+    //or should we keep putting the same value, according to previous values of vars in the table
+    public boolean table_value_rec(String[][] arr_new_values, int i , int j){
+
+        if(j==1){
+            return true;
+        }
+        else if(!arr_new_values[1][j-1].equals(arr_new_values[i][j-1]) || !arr_new_values[1][j-2].equals(arr_new_values[i][j-2])){
+
+            return false;
+        }
+        else{
+            return table_value_rec(arr_new_values,i, j-1);
+        }
+    }
+
 
     // find the probability of a specific variable with a given value (given its parents)
     public Double prob_var(BayesianNode node, String[][] cpt, String[][] hidden_table, int index_hidden, int index_denom) {
@@ -472,7 +491,7 @@ public class BasicProb {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input.txt");
-    static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input.txt");
+    static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input2.txt");
     //static File file = new File("input.txt"); // for the cmd running
     //file =
     static Scanner scanner;
@@ -498,7 +517,10 @@ public class BasicProb {
             String line = scanner.nextLine();
             BasicProb bs = new BasicProb(net, line);
             // System.out.println(bs.hidden_vars);
-            BayesianNode queryNode = (BayesianNode) net.get_nodes().get(bs.query_var); // returns the node in key query var - i.e, the query node
+            BayesianNode queryNode=new BayesianNode(new Variable(bs.query_var,null));
+            if(net.get_nodes()!=null) {
+                queryNode = (BayesianNode) net.get_nodes().get(bs.query_var); // returns the node in key query var - i.e, the query node
+            }
             String[][] cpt = net.make_CPT(queryNode);
             // net.printCpt(cpt);
             double result = bs.calcTotalProb();
