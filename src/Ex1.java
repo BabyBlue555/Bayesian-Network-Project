@@ -4,7 +4,7 @@ public class Ex1
 {
         // open and read from input file
    //     static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input.txt");
-        static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input2.txt"); // for the cmd running
+        static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input.txt"); // for the cmd running
        //file =
         static Scanner scanner;
         static {
