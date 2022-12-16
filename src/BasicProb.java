@@ -216,8 +216,8 @@ public class BasicProb {
                 parents = hidden_node.getParents().toArray(new BayesianNode[0]);
 
                 //  for (BayesianNode parent : parents) {
-                // start from last parent from the xml , since it is backwards in the cpt.
-                for (int k = parents.length - 1; k >= 0; k--) {
+                // start from last parent from the xml , since it is backwards in the cpt. - uncessesary , its in prob_var
+                for (int k = 0; k < parents.length ; k++) {
                     new_hidden.addParents(parents[k]);
                 }
 
@@ -372,29 +372,35 @@ public class BasicProb {
                         for (int par=parents.length-1;par>=0;par--) {
                             flag_parents = false;
                             String parent_value = "";
-                            if (!check_node(parents[par]).equals("hidden")) {
-                                parent_value = check_value_node(parents[par]);
 
-                            }
                             // edge case - if we calculate the denominator and the parent is query
                             if (index_denom != -1 && check_node(parents[par]).equals("query")) {
                                 String[] arr_val = parents[par].getVar().getValues().toArray(new String[0]);
                                 parent_value = arr_val[index_denom];
 
                             }
-                            // edge case - if the parent is hidden
-                            else {
-                                // String[] parent_values;
-                                //  parent_values = parent.getVar().getValues().toArray(new String[0]);
-                                for (int k = 0; k < hidden_table[index_hidden].length; k++) {
-                                    if (hidden_table[0][k].equals(parents[par].getVar().getName())) {
 
-                                        parent_value = hidden_table[index_hidden][k];
 
-                                    }
+                                //the parent is not hidden and also we are in the numenator calc
+                                if (!check_node(parents[par]).equals("hidden")) {
+                                    parent_value = check_value_node(parents[par]);
+
                                 }
 
-                            }
+                                // edge case - if the parent is hidden
+                                else {
+                                    // String[] parent_values;
+                                    //  parent_values = parent.getVar().getValues().toArray(new String[0]);
+                                    for (int k = 0; k < hidden_table[index_hidden].length; k++) {
+                                        if (hidden_table[0][k].equals(parents[par].getVar().getName())) {
+
+                                            parent_value = hidden_table[index_hidden][k];
+
+                                        }
+                                    }
+
+                                }
+
 
                             if (cpt[0][j].equals(parents[par].getVar().getName())) { // if we are in the parent column (check made_cpt() function for better understanding)
                                 // does it matter if the parent is evidence/ hidden/query?
