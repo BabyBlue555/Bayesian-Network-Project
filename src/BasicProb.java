@@ -157,7 +157,7 @@ public class BasicProb {
                 Variable var = new Variable(query_var, values);
                 BayesianNode denom_node = new BayesianNode(var);
                 BayesianNode[] parents;
-                parents = denom_node.getParents().toArray(new BayesianNode[0]);
+                parents = queryNode.getParents().toArray(new BayesianNode[0]);
                 for (int k = 0; k < parents.length ; k++) {
                     denom_node.addParents(parents[k]);
                 }
