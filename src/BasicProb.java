@@ -156,13 +156,23 @@ public class BasicProb {
                 values.add(value);
                 Variable var = new Variable(query_var, values);
                 BayesianNode denom_node = new BayesianNode(var);
+                BayesianNode[] parents;
+                parents = denom_node.getParents().toArray(new BayesianNode[0]);
+                for (int k = 0; k < parents.length ; k++) {
+                    denom_node.addParents(parents[k]);
+                }
+
                 //calculates the given probs of all the other query values
                 // that aren't the value in the .txt
                 denominator += total_calc(denom_node, "denominator", index_denom);
                 addition_counter++;
 
             }
-            index_denom++;
+            if( index_denom< queryNode.getVar().getValues().size())
+                index_denom++;
+            else{
+                System.out.println("error! index out of bounds");
+            }
         }
 
 
@@ -382,7 +392,7 @@ public class BasicProb {
 
 
                                 //the parent is not hidden and also we are in the numenator calc
-                                if (!check_node(parents[par]).equals("hidden")) {
+                              else if (!check_node(parents[par]).equals("hidden")) {
                                     parent_value = check_value_node(parents[par]);
 
                                 }
@@ -395,7 +405,7 @@ public class BasicProb {
                                         if (hidden_table[0][k].equals(parents[par].getVar().getName())) {
 
                                             parent_value = hidden_table[index_hidden][k];
-
+                                            break;
                                         }
                                     }
 
@@ -411,6 +421,7 @@ public class BasicProb {
 
                                 if (!parent_value.equals(cpt[i][j])) {
                                     index_wanted_row = -1; // if the value in this row is right for the node but not for one of its' parents
+                                    flag_parents=false;
                                     break; // keep checking the next rows
                                 } else if (!(index_wanted_row > 0 && i == index_wanted_row)) {
                                     break;
@@ -421,10 +432,18 @@ public class BasicProb {
                             }
                         }
 
+                        if(index_wanted_row==-1){ // if one of the parents has the wrong value
+                            break;
+                        }
+
                     }
+
                     if (flag_parents) {
                         return Double.parseDouble(cpt[index_wanted_row][cpt[index_wanted_row].length - 1]); // col = the probabilities column is the last one
                     }
+//                    else{
+//                        break;
+//                    }
 
                 }
 
@@ -497,7 +516,7 @@ public class BasicProb {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input.txt");
-    static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input2.txt");
+    static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input.txt");
     //static File file = new File("input.txt"); // for the cmd running
     //file =
     static Scanner scanner;
