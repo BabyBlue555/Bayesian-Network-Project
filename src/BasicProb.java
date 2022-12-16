@@ -2,6 +2,9 @@ import com.sun.org.apache.bcel.internal.generic.RETURN;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.io.*;
 
@@ -118,6 +121,14 @@ public class BasicProb {
     }
 
 
+    private static double round(double value, int places) {
+                if (places < 0) throw new IllegalArgumentException();
+
+                BigDecimal bd = new BigDecimal(Double.toString(value));
+                bd = bd.setScale(places, RoundingMode.HALF_UP);
+                return bd.doubleValue();
+            }
+
     public Double calcTotalProb() {
 
         double total_prob = 0;
@@ -128,7 +139,8 @@ public class BasicProb {
 
         double numerator = 0;
         double denominator = 0;
-//        int count_mult = 0;
+        count_mult = 0;
+        addition_counter=0;
         // 1. make a list of all the variables of the net.
         //2. make a node for each variable in order to make a cpt
         //3. make cpt's in order to calculate the probabilities
@@ -143,6 +155,7 @@ public class BasicProb {
         // for normalization:
         BayesianNode queryNode = (BayesianNode) net.get_nodes().get(query_var); // check if its right!
         denominator = numerator;
+        addition_counter++;
         ArrayList<Double> query_probs = new ArrayList<>();
 
 //        for (double prob : query_probs) {
@@ -165,7 +178,7 @@ public class BasicProb {
                 //calculates the given probs of all the other query values
                 // that aren't the value in the .txt
                 denominator += total_calc(denom_node, "denominator", index_denom);
-                addition_counter++;
+
 
             }
             if( index_denom< queryNode.getVar().getValues().size())
@@ -174,8 +187,13 @@ public class BasicProb {
                 System.out.println("error! index out of bounds");
             }
         }
-
-
+//        DecimalFormat df = new DecimalFormat("0.00000");
+//        numerator=Double.valueOf(df.format(numerator));
+//        denominator=Double.valueOf(df.format(denominator));
+//        numerator=(double)Math.round(numerator * 100000d) / 100000d;
+//        denominator=(double)Math.round(denominator * 100000d) / 100000d;
+//        numerator=round(numerator,8);
+//        denominator=round(denominator,8);
         System.out.println("number of multiplications: " + count_mult);
         System.out.println("number of additions: " + addition_counter);
         return numerator / denominator;
@@ -213,6 +231,7 @@ public class BasicProb {
                 count_mult++;
                 // the multiplication of all the evidence probs for a specific addition
             }
+            count_mult--;
 
             for (int j = 0; j < hidden_values_table[i].length; j++) {
                 BayesianNode hidden_node = (BayesianNode) net.get_nodes().get(hidden_values_table[0][j]);
@@ -232,10 +251,17 @@ public class BasicProb {
                 }
 
                 hidden_prob *= prob_var(new_hidden, hidden_cpt, hidden_values_table, i, index_denom);
+                count_mult++;
             }
+            count_mult--;
 
             numerator += query_prob * evidence_prob * hidden_prob;
+            count_mult+=2;
+            addition_counter++;
+           // df.format(numerator);
         }
+        addition_counter--;
+
         return numerator;
     }
 
@@ -515,7 +541,7 @@ public class BasicProb {
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input.txt");
+    //static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input2.txt");
     static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input2.txt");
     //static File file = new File("input.txt"); // for the cmd running
     //file =
