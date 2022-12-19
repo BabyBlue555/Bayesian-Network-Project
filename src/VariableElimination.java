@@ -160,34 +160,6 @@ public class VariableElimination {
         return hidden_values;
     }
 
-//    public ArrayList<String[][]> getCPTs() throws NullPointerException {
-//        ArrayList<String[][]> factors = new ArrayList<>();
-//        //String[][] query_cpt=null;
-//        try {
-//            // query
-//            BayesianNode query_node = (BayesianNode) net.get_nodes().get(query_var);
-//            String[][] query_cpt = net.make_CPT(query_node);
-//            factors.add(query_cpt);
-//            // evidences
-//            for (String str : evidence_vars) {
-//                BayesianNode evidence_node = (BayesianNode) net.get_nodes().get(str);
-//                String[][] evidence_cpt = net.make_CPT(evidence_node);
-//                factors.add(evidence_cpt);
-//            }
-//            //hidden
-//            for (String str : hidden_vars) {
-//                BayesianNode hidden_node = (BayesianNode) net.get_nodes().get(str);
-//                String[][] hidden_cpt = net.make_CPT(hidden_node);
-//                factors.add(hidden_cpt);
-//            }
-//
-//        } catch (NullPointerException e) {
-//            e.printStackTrace();
-//        }
-//        // return cpt;
-//        return factors;
-//    }
-
 
     // make cpt's for each variable
     public ArrayList<String[][]> getCPTs_factor() throws NullPointerException {
@@ -243,7 +215,7 @@ public class VariableElimination {
                 for (int i = 0; i < vars_factor.length; i++) {
                     if (evidence_name.equals(vars_factor[i])) {
                         BayesianNode node_evidence = (BayesianNode) net.get_nodes().get(evidence_name);
-                        ;
+
                         String value = check_value_evidence(node_evidence);
                         if (new_cpt != null) {
                             _factor.setCpt(new_cpt);
@@ -267,24 +239,15 @@ public class VariableElimination {
                 _factor.setCpt(new_cpt);
                // factor.setCpt(new_cpt); // in order to have an access to the updated cpt through factor class
             }
+            else{
+                new_list.add(factor.cpt);
+            }
+
         }
 
         return new_list;
     }
-//        ArrayList<String[][]> factors = getCPTs_factor();
-//        for(String[][] factor: factors){
-//            String [] vars_factor =get_name_vars(factor);
-//            for(String evidence_name: evidence_vars){
-//                for (int i=0; i< vars_factor.length;i++){
-//                    if(evidence_name.equals(vars_factor[i])){
-//                        delete_evidence( factor);
-//                    }
-//                }
-//            }
-    //System.out.println(arr_factors[i]);
-    //  }
-//        return null;
-//    }
+
 
     // returns an array of names of the variables in the factor
     private String[] get_name_vars(String[][] factor) {
