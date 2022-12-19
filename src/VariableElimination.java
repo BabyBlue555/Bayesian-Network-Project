@@ -234,7 +234,9 @@ public class VariableElimination {
     public ArrayList<String[][]> find_evidence() {
         String[][] new_cpt;
         ArrayList<String[][]> new_list = new ArrayList<>();
+
         for (Factor factor : this.factors) {
+            Factor _factor= new Factor(factor); // make a copy of factor in order to compare the changes after the deleting
             new_cpt = null; // to each factor, start over
             String[] vars_factor = get_name_vars(factor.cpt);
             for (String evidence_name : evidence_vars) {
@@ -244,13 +246,16 @@ public class VariableElimination {
                         ;
                         String value = check_value_evidence(node_evidence);
                         if (new_cpt != null) {
-                            factor.setCpt(new_cpt);
+                            _factor.setCpt(new_cpt);
+                           // factor.setCpt(new_cpt);
 //                            new_cpt=delete_evidence(factor,evidence_name, value);
                         }
-                        new_cpt = delete_evidence(factor, evidence_name, value);
-                        if (new_cpt.length == 2) { // 2 rows- including the variable names - first row
-                            // remove_factor(new_cpt);
-                            factors.remove(new_cpt);
+                        new_cpt = delete_evidence(_factor, evidence_name, value);
+                        if(new_cpt != null) {
+                            if (new_cpt.length == 2) { // 2 rows- including the variable names - first row
+                                // remove_factor(new_cpt);
+                                factors.remove(new_cpt);
+                            }
                         }
 
                     }
@@ -259,7 +264,8 @@ public class VariableElimination {
             }
             if (new_cpt != null) {
                 new_list.add(new_cpt); // after we checked we deleted all of the evidences from the factor
-                factor.setCpt(new_cpt); // in order to have an access to the updated cpt through factor class
+                _factor.setCpt(new_cpt);
+               // factor.setCpt(new_cpt); // in order to have an access to the updated cpt through factor class
             }
         }
 
