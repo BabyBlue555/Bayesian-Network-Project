@@ -25,8 +25,8 @@ public class BayesianNode {
         this.var = var;
     }
 
-    public void setFactor(ArrayList<Variable> vars, ArrayList<Double> probs, ArrayList<String> var_values) {
-        this.factor = new Factor(vars, probs, var_values);
+    public void setFactor(String var_name,ArrayList<Variable> vars, ArrayList<Double> probs, ArrayList<String> var_values, String [][] cpt) {
+        this.factor = new Factor(vars, probs,cpt);
         //this.factor= new Factor(vars,probabilities);
 //        this.factor.var_values=var.getValues();
 
@@ -49,6 +49,8 @@ public class BayesianNode {
     }
 
     public Factor getFactor() {
+//        BayesianNode node= new BayesianNode(var);
+//        factor.make_cpt(node);
         return factor;
     }
 

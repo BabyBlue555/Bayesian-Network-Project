@@ -3,7 +3,7 @@ import java.util.Scanner;
 public class Ex1
 {
         // open and read from input file
-   //     static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input.txt");
+   //     static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input2.txt");
         static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input.txt"); // for the cmd running
        //file =
         static Scanner scanner;
@@ -32,9 +32,21 @@ public class Ex1
 //            VariableElimination v_e = new VariableElimination(net, line);
 //            String result = v_e.get_answer();
             BasicProb bs= new BasicProb(net,line);
+            VariableElimination ve= new VariableElimination(net,line);
 //            String result=bs.calcProb().toString();
-            String result= String.valueOf(bs.calcTotalProb());
+            String result=null;
+            if(line.split("\\),")[1].equals("1")) {
+                 result = bs.calcTotalProb();
+
+            }
+            else if(line.split("\\),")[1].equals("2")){
+                result =String.valueOf(ve); //
+            }
+            System.out.println();
             out.write(result);
+            System.out.println();
+
+
         }
         if (scanner.hasNextLine()){
             out.newLine();

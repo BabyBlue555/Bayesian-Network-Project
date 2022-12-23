@@ -147,7 +147,8 @@ public class BayesianNetwork {
             Variable var = cur_node.getVar();
             varsOfFactor.add(var);
             ArrayList<String> var_values= new ArrayList<>();
-            Factor f = new Factor(varsOfFactor, probs, var_values);
+            String [][]cpt= new String[0][0];
+            Factor f = new Factor(varsOfFactor, probs,cpt);
             cur_node.setFactor(f);
         }
     }

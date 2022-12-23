@@ -1,10 +1,7 @@
-import com.sun.org.apache.bcel.internal.generic.RETURN;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.*;
 import java.io.*;
 
@@ -22,6 +19,7 @@ public class BasicProb {
     int addition_counter = 0;
     //  int mult_counter = 0;
     int count_mult = 0;
+    private ArrayList<Factor> _factors;
 
 
     // constructor
@@ -129,7 +127,7 @@ public class BasicProb {
                 return bd.doubleValue();
             }
 
-    public Double calcTotalProb() {
+    public String calcTotalProb() {
 
         double total_prob = 0;
         double query_prob = 0;
@@ -196,7 +194,8 @@ public class BasicProb {
 //        denominator=round(denominator,8);
         System.out.println("number of multiplications: " + count_mult);
         System.out.println("number of additions: " + addition_counter);
-        return numerator / denominator;
+        String result=get_result(numerator / denominator,addition_counter,count_mult);
+        return result;
     }
 
 
@@ -539,10 +538,18 @@ public class BasicProb {
         return "query";
     }
 
+    public String get_result(double prob, int addition, int mult){
+        String str="";
+        str=str.concat(String.valueOf(prob)+",");
+        str=str.concat(String.valueOf(addition)+",");
+        str=str.concat(String.valueOf(mult));
+        return str;
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input2.txt");
-    static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input2.txt");
+    static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input.txt");
     //static File file = new File("input.txt"); // for the cmd running
     //file =
     static Scanner scanner;
@@ -574,7 +581,7 @@ public class BasicProb {
             }
             String[][] cpt = net.make_CPT(queryNode);
             // net.printCpt(cpt);
-            double result = bs.calcTotalProb();
+            String result = bs.calcTotalProb();
             System.out.println(result);
 //            for(String var_name: bs.hidden_vars) {
 //                System.out.println(bs.getHiddenValues(var_name));
