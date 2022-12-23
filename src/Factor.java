@@ -5,27 +5,27 @@ import java.util.ArrayList;
 public class Factor {
     // variables, var_values , probabilities
 
-    String var_name;
+  //  String var_name;
     ArrayList<Variable> variables;
-    ArrayList<String> var_values;
+   // ArrayList<String> var_values;
     ArrayList<Double> probabilities;
     String [][] cpt;
 
     public Factor() {
-        this.var_name= new String(); ///// delete or fix
+        //this.var_name= new String(); ///// delete or fix
         this.variables = new ArrayList<>();
-        this.var_values = new ArrayList<String>();
+       // this.var_values = new ArrayList<String>();
         this.probabilities = new ArrayList<>();
         this.cpt= new String[0][0];
     }
 
-    public Factor(String var_name,ArrayList<Variable> variables, ArrayList<Double> probabilities , String [][] cpt) {
+    public Factor(ArrayList<Variable> variables, ArrayList<Double> probabilities , String [][] cpt) {
         this.variables = variables;
-        this.var_values = new ArrayList<>();
+     //   this.var_values = new ArrayList<>();
         this.probabilities = probabilities;
-        setVarValues(this.var_values);
-        //this.cpt=cpt;
+        //setVarValues();
         setCpt(cpt);
+        //this.cpt=cpt;
 //        setCpt(new Variable(var_name,new ArrayList<>()));
 //        for(Variable v :variables) {
 //            setVarValues(v);
@@ -33,6 +33,15 @@ public class Factor {
 //        for(Variable v :variables) {
 //            make_CPT(new BayesianNode(v));
 //        }
+    }
+
+    // copy constructor for V.E delete_evidence debugging
+    public Factor(Factor _factor) {
+        this.variables = _factor.variables;
+       // this.var_values = new ArrayList<>();
+        this.probabilities = _factor.probabilities;
+        //setVarValues();
+        setCpt(_factor.cpt);
     }
 
 
@@ -44,12 +53,12 @@ public class Factor {
         this.probabilities = probabilities;
     }
 
-    public void setVarValues(ArrayList<String> var_values) { // ????????/
-        for(Variable var: this.variables ){
-            for(String value: var.getValues())
-            var_values.add(value);
-        }
-    }
+//    public void setVarValues() { // ????????/
+//        for(Variable var: this.variables ){
+//            for(String value: var.getValues())
+//               // var_values.add(value);
+//        }
+//    }
 
     public void setCpt(String[][] cpt){
         this.cpt=cpt;
@@ -68,9 +77,9 @@ public class Factor {
         return probabilities;
     }
 
-    public ArrayList<String> getVar_values() {
-        return var_values;
-    }
+  //  public ArrayList<String> getVar_values() {
+  //      return var_values;
+    //}
 
     public String[][] make_cpt(BayesianNode node) {
 
@@ -226,8 +235,8 @@ public class Factor {
         String str = "Factor:\n" +
                 "_variables=" + variables.toString() + "\n";
         for (int i = 0; i < probabilities.size(); i++)
-            str += var_values.get(i) + " | " + probabilities.get(i) + "\n";
-
+            str +=   probabilities.get(i) + "\n";
+//var_values.get(i) + " | "
         return str;
     }
 
@@ -237,14 +246,14 @@ public class Factor {
     public static void main(String[] args) throws IOException {
         try {
             Factor f = new Factor();
-            System.out.println(f.var_values);
-            String value= "t";
-            f.var_values.add(value);
-            System.out.println(f.var_values);
-            System.out.println(f);
-            System.out.println(f.getVar_values());
-            ArrayList<String> new_vals= new ArrayList<>();
-            f.setVarValues(new_vals);
+//            System.out.println(f.var_values);
+//            String value= "t";
+//            f.var_values.add(value);
+//            System.out.println(f.var_values);
+//            System.out.println(f);
+//            System.out.println(f.getVar_values());
+//            ArrayList<String> new_vals= new ArrayList<>();
+//            f.setVarValues();
         } catch (NullPointerException e) {
             e.printStackTrace();
             System.out.println("null error ");
