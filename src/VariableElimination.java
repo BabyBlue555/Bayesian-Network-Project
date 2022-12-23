@@ -402,50 +402,133 @@ public class VariableElimination {
 //    }
 
 
+    // a. sorts the hidden vars by ABC.
+    //b. for each hidden, it iterates through the cpts and add the cpts that has the current hidden in them to a list
+    //c. then, it sorts by size/ ASCII all the cpts of the current hidden, and joins the cpts.
     public void to_join(ArrayList<String[][]> new_list) {
 
         //arr_cpt= new_list.toArray
         boolean found_factor;
-        ArrayList<String[][]> to_join = new ArrayList<>();
+       // ArrayList<String[][]> to_join = new ArrayList<>();
+        ArrayList <String[][]> update_list= new ArrayList<>();
         // Factor [] arr_factors= new Factor[0];
         ArrayList<Factor> lst_factors = new ArrayList<>();
-        ArrayList<String> sorted_hiddens = sort_by_abc(hidden_vars);
+        ArrayList<String> sorted_hiddens = sort_by_abc(hidden_vars); // sort the hiddens
+//        for (Factor factor : factors) {
+//            update_list.add(new Factor(factor).cpt); // make a  "copy" of new_list in order to update the list
+//            // after the joining
+//        }
+
         for (String curr_hidden : sorted_hiddens) {
             lst_factors = new ArrayList<>(); // for each hidden , make a new list of factors
-            for (String[][] cpt : new_list) {
+            //  for (String[][] cpt : new_list) {
+            for (Factor factor : factors) {
                 found_factor = false;// for each cpt, we need this flag to find the factor that matches it
-                String[] vars_factor = get_name_vars(cpt);
+                String[] vars_factor = get_name_vars(factor.cpt);
                 for (int i = 0; i < vars_factor.length; i++) {
                     if (vars_factor[i].equals(curr_hidden)) {
-                        //    to_join.add(cpt); // if the cpt has hidden in it, add it to the list
-                        for (Factor factor : factors) {
-                            if (cpt.equals(factor.cpt)) {
-                                lst_factors.add(factor); // we need this in order to use sort_factors(...)
-                                // optional - to save time, create a flag = true when we found the right factor,
-                                // and then break if flag= true cause we dont need to keep searching
-                                found_factor = true;
-                            } else {
-                                if (found_factor) {
-                                    break;
-                                }
-                            }
+                        lst_factors.add(factor); // we need this in order to use sort_factors(...)
 
-                            // sort_factors(to_join,factor);
-                        }
                     }
+                        //to_join.add(cpt); // if the cpt has hidden in it, add it to the list
+                        //  for (Factor factor : factors) {
+                        // if (cpt.equals(factor.cpt)) {
 
+                        // optional - to save time, create a flag = true when we found the right factor,
+                        // and then break if flag= true cause we dont need to keep searching
+                       // found_factor = true;
 
-                    // join_cpts(to_join);
-                    // sort_factors(to_join,curr_hidden);
+//                    else {
+//                        if (found_factor) {
+//                            break;
+//                        }
+//                    }
+
+                    // sort_factors(to_join,factor);
                 }
             }
-            sort_factors(lst_factors); // for each hidden , sort the cpts that contains it
+
+
+            // join_cpts(to_join);
+            // sort_factors(to_join,curr_hidden);
+
+
+            lst_factors=sort_factors(lst_factors); // for each hidden , sort the cpts that contains it
             Factor[] arr_factors = lst_factors.toArray(new Factor[0]);
 //            for(Factor factor: lst_factors){
             for (int i = 0; i < arr_factors.length - 1; i++) {
-                union_cpts(arr_factors[i], arr_factors[i + 1]);
-            }
+                // ***check if there is a case where there is only one cpt for a curr_hidden***
+                String[][] joined_cpt = union_cpts(arr_factors[i], arr_factors[i + 1]);
+                // creating a new factor for the joined cpt , then add it to the list
+                // and remove the cpts that we united.
+                Factor joined_factor = new Factor();
+                ArrayList<Variable> var_list = new ArrayList<>();
+                boolean flag_evidence = false;
+                for (Variable var : arr_factors[i].variables) {
+                    for (String evidence : evidence_vars) {
+                        if (var.getName().equals(evidence)) {
+                            flag_evidence = true;
+                            break;
+                        }
+                    }
+                    if (!flag_evidence) {
+                        var_list.add(var);
+                    }
+                }
+                String[] vars_factor1 = get_name_vars(arr_factors[i].cpt);
+                String[] vars_factor2 = get_name_vars(arr_factors[i + 1].cpt);
+                for (Variable var : arr_factors[i + 1].variables) {
+                    flag_evidence = false;
+                    if (!both_cpts(vars_factor1, vars_factor2).contains(var)) {
+                        for (String evidence : evidence_vars) {
+                            if (var.getName().equals(evidence)) {
+                                flag_evidence = true;
+                                break;
+                            }
+                        }
+                        if (!flag_evidence) {
+                            var_list.add(var);
+                        }
+                    }
+                }
+                //joined_factor.setVariables(var_list);
+                ArrayList<Double> lst_probs = new ArrayList<>();
+                for (int row = 1; row < joined_cpt.length; row++) {
+                    double prob = Double.parseDouble(joined_cpt[row][(joined_cpt[row].length) - 1]);
+                    lst_probs.add(prob);
+                }
 
+                arr_factors[i+1].setVariables(var_list);
+                arr_factors[i+1].setProbabilities(lst_probs);
+                arr_factors[i+1].setCpt(joined_cpt);
+
+               // joined_factor.setProbabilities(lst_probs);
+                //joined_factor.setCpt(joined_cpt);
+                // add the new factor to the list
+//                lst_factors.add(joined_factor);
+//                // remove the 2 factors of the cpts we joined from the list of the current hidden
+//                lst_factors.remove(arr_factors[i]);
+//                lst_factors.remove(arr_factors[i + 1]);
+                // remove the 2 factors of the cpts we joined from the list of all cpts
+
+                //update_list= new_list;
+//                for(String[][] cpt:update_list){
+//                    if(cpt.equals(arr_factors[i].cpt) || cpt.equals(arr_factors[i+1])){
+//                        update_list.remove(cpt);
+//                    }
+//                }
+//                new_list.remove(arr_factors[i]);
+//                new_list.remove(arr_factors[i + 1]);
+               // lst_factors=sort_factors(lst_factors); // no need, the joined cpt in stored in arr_factors[i+1]
+                arr_factors = lst_factors.toArray(new Factor[0]); // in order to update the array after joining
+//                if(arr_factors.length>1){
+//                    i--; // we need to keep joining cpts with the already new joined cpt
+//                }
+            }
+            // before i move the the next hidden after the eliminate function, i need to update the total factor's list,
+            // see example in yael's  presentation - slide 27
+            // after all the joining and eliminate , i should have only one cpt for each hidden
+           // update_list.add(arr_factors[0].cpt);
         }
 
     }
@@ -461,10 +544,10 @@ public class VariableElimination {
 
 
     // for each hidden variable, sort the cpts that contains it from small to large (according to number of rows)
-    public ArrayList<String[][]> sort_factors(ArrayList<Factor> lst_factors) {
+    public ArrayList<Factor> sort_factors(ArrayList<Factor> lst_factors) {
         // ArrayList<String[][]>to_join
         //String curr_hidden
-        ArrayList<String[][]> new_to_join = new ArrayList<>();
+        ArrayList<Factor> new_to_join = new ArrayList<>();
         Factor[] arr_factors = lst_factors.toArray(new Factor[0]);
         // bubble sort
         for (int i = 0; i < arr_factors.length - 1; i++) {
@@ -473,23 +556,27 @@ public class VariableElimination {
             //   if(to_join.contains(arr_factors[i])) { // unneccessary, since factors contains the updated cpts
             for (int j = 0; j < (arr_factors.length) - 1 - i; j++) {
                 if (arr_factors[j].cpt.length > arr_factors[j + 1].cpt.length) {
-                    String[][] swap = arr_factors[j].cpt;
-                    arr_factors[j].cpt = arr_factors[j + 1].cpt;
-                    arr_factors[j + 1].cpt = swap;
+                    Factor swap =new Factor(arr_factors[j]); // deep copy
+                    arr_factors[j]=new Factor(arr_factors[j+1]); // deep copy
+                    arr_factors[j+1]=swap;
+//                    String[][] swap = arr_factors[j].cpt;
+//                    arr_factors[j].cpt = arr_factors[j + 1].cpt;
+//                    arr_factors[j + 1].cpt = swap;
 
                 } else if (arr_factors[j].cpt.length == arr_factors[j + 1].cpt.length) {
                     if (sort_by_ASCII(arr_factors[j].cpt, arr_factors[j + 1].cpt)) { //if the function returns true - we need to switch between the cpt's.
-                        String[][] swap = arr_factors[j].cpt;
-                        arr_factors[j].cpt = arr_factors[j + 1].cpt;
-                        arr_factors[j + 1].cpt = swap;
+                        Factor swap =new Factor(arr_factors[j]); // deep copy
+                        arr_factors[j]=new Factor(arr_factors[j+1]); // deep copy
+                        arr_factors[j+1]=swap;
                     }
                 }
             }
         }
 
         for (int j = 0; j < arr_factors.length; j++) {
-            new_to_join.add(arr_factors[j].cpt);
+            new_to_join.add(arr_factors[j]);
         }
+
         return new_to_join;
     }
 
@@ -526,12 +613,14 @@ public class VariableElimination {
     // it returns the joined cpt
     public String[][] union_cpts(Factor factor1, Factor factor2) {
         // cpt1 - the smaller cpt / right cpt of the join
-        String[][] cpt1= factor1.cpt;
+        String[][] cpt1 = factor1.cpt;
         // cpt2 - the larger cpt/ left cpt of the join
-        String[][] cpt2= factor2.cpt;
+        String[][] cpt2 = factor2.cpt;
 
         String[] vars_factor1 = get_name_vars(cpt1);
         String[] vars_factor2 = get_name_vars(cpt2);
+
+
         boolean evidence_flag = false;
 //        ArrayList<Variable> vars1= new ArrayList<>();
 //        ArrayList<Variable> vars2= new ArrayList<>();
@@ -540,17 +629,9 @@ public class VariableElimination {
 
         // list of variables that are in both of the cpts
         ArrayList<String> both_cpt = new ArrayList<>();
+        both_cpt = both_cpts(vars_factor1, vars_factor2);
         int num_rows = 1; // represent num of rows of the union cpt
         int num_col = 1; // starts with 1 for the probability column
-
-        for (int i = 0; i < vars_factor1.length; i++) {
-            for (int j = 0; j < vars_factor2.length; j++) {
-                if (vars_factor2[j].equals(vars_factor1[i])) {
-                    both_cpt.add(vars_factor1[i]);
-                }
-            }
-        }
-
 
         // initialize num or rows and columns in union cpt
         for (Variable var : factor1.variables) {
@@ -565,6 +646,10 @@ public class VariableElimination {
                 num_rows *= var.getValues().size();
                 num_col++;
             }
+//            else{
+//                factor1.variables.remove(var);
+//                factor1.setVariables(  factor1.variables);
+//            }
 
         }
         for (Variable var : factor2.variables) {
@@ -572,6 +657,8 @@ public class VariableElimination {
             if (!both_cpt.contains(var.getName())) { // if the variable is not in both cpt's - to avoid redundant rows
                 for (String evidence : evidence_vars) {
                     if (var.getName().equals(evidence)) {
+//                        factor2.variables.remove(var);
+//                        factor2.setVariables(factor2.variables);
                         evidence_flag = true;
                         break;
                     }
@@ -589,6 +676,7 @@ public class VariableElimination {
         // union of cpts:
         //a. initialize data structures or variables
         String[][] union_cpt = new String[num_rows][num_col]; // the new cpt, after joining the cpts
+        String[] union_name_var = new String[num_col];
         String[] union_row = new String[num_col]; // for each row in cpt1,
         // except from the last one, its  the values of each var
         Double[] union_prob = new Double[num_rows]; // the new probs of the joined cpt
@@ -597,79 +685,126 @@ public class VariableElimination {
 
         //b. define parameter to check in which row the values should be inserted to the union_cpt, in case we have
         // multiple rows with the same values for the variables that are in both of the cpt's
-        int ratio= (union_cpt.length-1) / (cpt1.length-1); // the ratio between the new cpt to the left cpt
+        int ratio = (union_cpt.length - 1) / (cpt1.length - 1); // the ratio between the new cpt to the left cpt
 
         // c. iterating through the cpts
-        for (int row_1 = 1; row_1 < cpt1.length; row_1++) {
-            not_same_value=false;
-            union_prob=new Double[num_rows];
-            int count_row_ratio=0;
+        for (int row_1 = 0; row_1 < cpt1.length; row_1++) {
+            not_same_value = false;
+            union_prob = new Double[num_rows];
+            //    union_name_var= new String[num_col];
+            //    union_row= new String[num_col];
+            int count_row_ratio = 0;
+            int index_col_name=0; // indictates in which column in the union cpt belongs to the variable
 
-            //  for(int col_1=0; col_1<cpt1[row_1].length;col_1++){
-            // iterating through the second/right cpt
-            for (int row_2 = 1; row_2 < cpt2.length; row_2++) {
-              // reinitialize:
-             //   count_row_ratio=0;
-                union_prob=new Double[num_rows];
-                not_same_value=false;
+            if (row_1 == 0) { // putting the variable names of cpt1 in the union cpt
+                for (int col_1 = 0; col_1 < cpt1[row_1].length; col_1++) {
 
-                // storing the values for each row in cpt1
-                for (int col = 0; col < cpt1[row_1].length; col++) {
-                    if(col==cpt1[row_1].length-1) { // edge case - if we are in the prob column
-                        union_prob[row_1] = Double.valueOf(cpt1[row_1][col]);
+                    if(col_1< cpt1[row_1].length-1) {
+                        union_name_var[col_1] = cpt1[row_1][col_1];
                     }
-                    else{
-                        union_row[col] = cpt1[row_1][col];
+                    else{ // we want to add the "probs" only after we put the variable names of cpt2
+                        continue;
                     }
+                    index_col_name=col_1+1;
                 }
 
+            }
+            else {
 
+                for(int j=0;j<cpt2[0].length;j++) {
+                    //if (row_2 == 0) {
+                        if (!both_cpt.contains(cpt2[0][j])) {
+                            if (index_col_name < num_col) {
+                                union_name_var[index_col_name] = cpt2[0][j];
 
-                for (int col_2 = 0; col_2 < cpt2[row_2].length-1; col_2++) {
-                    // note - we don't iterate through the prob column
-                    String name_var_cpt2=cpt2[0][col_2]; // name of the column's variable
+                            }
 
-                    if(both_cpt.contains(name_var_cpt2)) {
-                        // checking if the values of the cpt's are the same
-                       String val_cpt1= get_value_row(cpt1, row_1,name_var_cpt2);
-                       if(!val_cpt1.equals(cpt2[row_2][col_2])){
-                           not_same_value=true;
-                           break;
-                       }
-                       else{
-                           union_row[col_2] = cpt2[row_2][col_2];
-                       }
-                    }
-                    else { // if the variable is only in the second/right cpt,
-                        //we need to save its value, because the row might be correct and should be in the union
-                        union_row[col_2] = cpt2[row_2][col_2];
-                    }
-
-
-                }
-
-                // after we checked all the columns in the row , except probs
-                if(!not_same_value){
-                    String last_col= cpt2[row_2][cpt2[row_2].length-1]; // the probability in row of cpt2
-                    union_prob[row_1]*=Double.valueOf(last_col);
-                    //  union_cpt[row_1+(cpt1.length-1)*count_row_ratio]=
-                    int index_row=0;
-                    if(count_row_ratio<ratio) {
-                        index_row = row_1 + ((cpt1.length - 1) * count_row_ratio);
-                        count_row_ratio++;
-                    }
-                    for(int j=0;j<num_col;j++){
-
-                        //edge case
-                        if(j==num_col-1){
-                            union_cpt[index_row][j]=Double.toString(union_prob[row_1]);
                         }
-                        else{
-                            union_cpt[index_row][j]=union_row[j];
+                    if(j==cpt2[0].length-1){ // probs
+                        union_name_var[index_col_name]=cpt2[0][j];
+                    }
+                    //}
+                    index_col_name++;
+                }
+
+
+                // iterating through the second/right cpt
+                for (int row_2 = 1; row_2 < cpt2.length; row_2++) {
+                    // reinitialize:
+                    //   count_row_ratio=0;
+                    union_prob = new Double[num_rows];
+                    union_row = new String[num_col];
+                    not_same_value = false;
+
+
+                    // storing the values for each row in cpt1
+                    for (int col = 0; col < cpt1[row_1].length; col++) {
+                        if (col == cpt1[row_1].length - 1) { // edge case - if we are in the prob column
+                            union_prob[row_1] = Double.valueOf(cpt1[row_1][col]);
+                        }
+                        else { // unnecessary!!!!!!!!!!!!
+                            union_row[col] = cpt1[row_1][col];
                         }
                     }
-                }
 
+                    for (int col_2 = 0; col_2 < cpt2[row_2].length - 1; col_2++) {
+                        // note - we don't iterate through the prob column
+                        String name_var_cpt2 = cpt2[0][col_2]; // name of the column's variable
+
+                       // else {
+                            if (both_cpt.contains(name_var_cpt2)) {
+                                // checking if the values of the cpt's are the same
+                                String val_cpt1 = get_value_row(cpt1, row_1, name_var_cpt2);
+                                if (!val_cpt1.equals(cpt2[row_2][col_2])) {
+                                    not_same_value = true;
+                                    break;
+                                } else {
+                                    union_row[col_2] = cpt2[row_2][col_2];
+                                }
+                            }
+                            else { // if the variable is only in the second/right cpt,
+                                //we need to save its value, because the row might be correct and should be in the union
+
+                                union_row[col_2] = cpt2[row_2][col_2];
+                            }
+
+
+                        }
+                    //}
+
+                    // after we checked all the columns in the row , except probs
+                    if (!not_same_value) { // if the values of cpt2 fits the values of cpt1 in the row
+                        int index_row = 0;
+                        if(row_2!=0) {
+                            String last_col = cpt2[row_2][cpt2[row_2].length - 1]; // the probability in row of cpt2
+                            union_prob[row_1] *= Double.valueOf(last_col);
+                            //  union_cpt[row_1+(cpt1.length-1)*count_row_ratio]=
+
+                            if (count_row_ratio < ratio) {
+                                // edge case - the rows with the same values should be successive
+                                if(both_cpt.size()==1) { // if there is a single common variable to the cpts
+                                    index_row= row_2;
+                                            //row_1 + count_row_ratio;
+                                }
+                                else {
+                                    index_row = row_1 + ((cpt1.length - 1) * count_row_ratio);
+                                }
+                                count_row_ratio++;
+                            }
+                        }
+                        for (int j = 0; j < num_col; j++) {
+
+                            //edge case- first row
+                            union_cpt[0][j]= union_name_var[j];
+                            //edge case - last column
+                            if (j == num_col - 1) {
+                                union_cpt[index_row][j] = Double.toString(union_prob[row_1]);
+                            } else {
+                                union_cpt[index_row][j] = union_row[j];
+                            }
+                        }
+                    }
+                }
 
             }
             //}
@@ -679,14 +814,26 @@ public class VariableElimination {
 
     }
 
+    private ArrayList<String> both_cpts(String[] vars_factor1, String[] vars_factor2) {
+        ArrayList<String> both_cpt = new ArrayList<>();
+        for (int i = 0; i < vars_factor1.length; i++) {
+            for (int j = 0; j < vars_factor2.length; j++) {
+                if (vars_factor2[j].equals(vars_factor1[i])) {
+                    both_cpt.add(vars_factor1[i]);
+                }
+            }
+        }
+        return both_cpt;
+    }
+
 
     // returns the value of a given variable in a given row in the cpt
     // input: the left cpt, index of left cpt and name of the current column in right cpt (cpt2)
-    public String get_value_row(String [][] cpt1,int row, String var_name){
-        String value=null;
-        for(int j=0;j< cpt1[row].length-1;j++){
-            if(cpt1[0][j].equals(var_name)){
-                value= cpt1[row][j];
+    public String get_value_row(String[][] cpt1, int row, String var_name) {
+        String value = null;
+        for (int j = 0; j < cpt1[row].length - 1; j++) {
+            if (cpt1[0][j].equals(var_name)) {
+                value = cpt1[row][j];
             }
         }
         return value;
@@ -770,7 +917,7 @@ public class VariableElimination {
     // normalize
 
 
-    static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input.txt");
+    static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input2.txt");
     //static File file = new File("input.txt"); // for the cmd running
     //file =
     static Scanner scanner;
