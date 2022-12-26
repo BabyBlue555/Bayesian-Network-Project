@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.io.*;
+import java.text.DecimalFormat;
+
+import static java.util.Objects.isNull;
 
 public class BasicProb {
     //Instance Variables
@@ -185,16 +188,12 @@ public class BasicProb {
                 System.out.println("error! index out of bounds");
             }
         }
-//        DecimalFormat df = new DecimalFormat("0.00000");
-//        numerator=Double.valueOf(df.format(numerator));
-//        denominator=Double.valueOf(df.format(denominator));
-//        numerator=(double)Math.round(numerator * 100000d) / 100000d;
-//        denominator=(double)Math.round(denominator * 100000d) / 100000d;
-//        numerator=round(numerator,8);
-//        denominator=round(denominator,8);
-        System.out.println("number of multiplications: " + count_mult);
-        System.out.println("number of additions: " + addition_counter);
-        String result=get_result(numerator / denominator,addition_counter,count_mult);
+
+
+        double prob=numerator / denominator;
+        System.out.println(prob);
+        String round_prob= round_prob(String.valueOf(prob));
+        String result=get_result(Double.parseDouble(round_prob),addition_counter,count_mult);
         return result;
     }
 
@@ -538,6 +537,31 @@ public class BasicProb {
         return "query";
     }
 
+    private String round_prob (String str_prob){
+        DecimalFormat df = new DecimalFormat("#.#####");
+        df.setRoundingMode(RoundingMode.HALF_DOWN);
+        //Double d = Double.parseDouble(str_prob);
+        String str_round = "";
+        try {
+            // System.out.println(str_prob);
+            if (isNull(str_prob)) {
+                System.out.println("the string is null!");
+            }
+            Double d = Double.parseDouble(str_prob);
+            str_round = df.format(d);
+            System.out.println(str_round);
+            // System.out.println(" ");
+            //   System.out.println(df.format(d)); // 0.00037, 0.0012
+            //   System.out.println(df.format(123.12345));
+
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+
+        return str_round;
+        // return "0.0001";
+    }
+
     public String get_result(double prob, int addition, int mult){
         String str="";
         str=str.concat(String.valueOf(prob)+",");
@@ -548,7 +572,6 @@ public class BasicProb {
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //static File file = new File("C:\\Users\\User\\Documents\\אריאל\\שנה ב\\סמסטר א\\אלגו בבינה מלאכותית\\מטלה\\input2.txt");
     static File file = new File("C:\\Users\\User\\IdeaProjects\\AI_try\\input.txt");
     //static File file = new File("input.txt"); // for the cmd running
     //file =
